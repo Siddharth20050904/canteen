@@ -3,17 +3,43 @@
 import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { registerUser } from '../../../server_actions/registerActions'; // Import the register action
+import { useRouter } from 'next/navigation'; // To redirect on success
 
 const RegisterPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add registration logic here
-    console.log('Registering with:', name, email, password, confirmPassword);
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    try {
+      // Call the server action to register the user
+      const res = await registerUser({ name, email, password });
+
+      if (res.success) {
+        setSuccessMessage(res.message);
+        setTimeout(() => {
+          router.push('/login'); // Redirect to login after successful registration
+        }, 1000);
+      } else {
+        setError(res.message || 'Registration failed');
+      }
+    } catch (err) {
+      setError('An error occurred during registration');
+      console.error('Registration error:', err);
+    }
   };
 
   return (
@@ -21,10 +47,12 @@ const RegisterPage = () => {
       <div className="flex justify-center items-center h-screen">
         <Card className="max-w-md w-full bg-gray-300">
           <CardHeader>
-            <CardTitle className="text-center text-2xl font-bold">Register</CardTitle>
+            <CardTitle className="text-center text-2xl font-bold rounded-lg">Register</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {error && <p className="text-red-500">{error}</p>}
+            {successMessage && <p className="text-green-500">{successMessage}</p>}
+            <form onSubmit={handleSubmit} className="space-y-4 bg-gray-200 rounded-lg p-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Full Name
