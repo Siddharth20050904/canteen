@@ -4,11 +4,11 @@ import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Edit, Trash, PlusCircle } from 'lucide-react';
+import { addMeal } from '../../../server_actions/mealAddition';
 
 interface MenuItemType {
   id: string;
   dish: string;
-  description: string;
   category: string;
   day: string;
   mealType: string;
@@ -20,7 +20,6 @@ const MenuManagementPage = () => {
     {
       id: '1',
       dish: 'Paneer Butter Masala',
-      description: 'Rich and creamy paneer dish with tomato gravy.',
       category: 'Main Course',
       day: 'Monday',
       mealType: 'Lunch',
@@ -28,7 +27,6 @@ const MenuManagementPage = () => {
     {
       id: '2',
       dish: 'Mixed Fruit Salad',
-      description: 'Fresh fruits with honey dressing.',
       category: 'Dessert',
       day: 'Wednesday',
       mealType: 'Snack',
@@ -53,7 +51,6 @@ const MenuManagementPage = () => {
     const newItem: MenuItemType = {
       id: currentItem ? currentItem.id : (menuItems.length + 1).toString(),
       dish: form.dish.value,
-      description: form.description.value,
       category: form.category.value,
       day: form.day.value,
       mealType: form.mealType.value,
@@ -64,6 +61,10 @@ const MenuManagementPage = () => {
     } else {
       setMenuItems([...menuItems, newItem]);
     }
+
+    console.log('Adding meal:', newItem);
+
+    addMeal(newItem);
     
     setIsEditing(false);
     setCurrentItem(null);
@@ -113,11 +114,10 @@ const MenuManagementPage = () => {
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                     required
                   >
-                    <option>Breakfast</option>
-                    <option>Main Course</option>
-                    <option>Side Dish</option>
-                    <option>Dessert</option>
-                    <option>Beverage</option>
+                    <option value="mainCourse">Main Course</option>
+                    <option value="sideDish">Side Dish</option>
+                    <option value="dessert">Dessert</option>
+                    <option value="beverage">Beverage</option>
                   </select>
                 </div>
                 <div>
@@ -156,20 +156,6 @@ const MenuManagementPage = () => {
                   </select>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  defaultValue={currentItem?.description || ''}
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-                  placeholder="Describe the dish..."
-                  required
-                />
-              </div>
-
               <button
                 type="submit"
                 className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
@@ -188,7 +174,6 @@ const MenuManagementPage = () => {
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <h3 className="font-medium text-lg">{item.dish}</h3>
-                    <p className="text-gray-600">{item.description}</p>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <span>{item.category}</span>
                       <span>•</span>

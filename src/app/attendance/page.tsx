@@ -71,9 +71,10 @@ const AttendancePage = () => {
           <CardContent>
             <div className="space-y-4">
               {todayMeals.map((meal) => (
+                // In the Today's Meals section, update the meal item div structure:
                 <div 
                   key={meal.id} 
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 space-y-4 sm:space-y-0"
                 >
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-blue-100 rounded-lg">
@@ -84,14 +85,19 @@ const AttendancePage = () => {
                       <p className="text-sm text-gray-600">{meal.time}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(meal.status)}`}>
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(meal.status)} sm:text-xs sm:px-2`}>
                       {meal.status.charAt(0).toUpperCase() + meal.status.slice(1)}
                     </span>
                     {meal.status === 'upcoming' && (
-                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        Mark Attendance
-                      </button>
+                      <>
+                        <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:px-2 ">
+                          Mark Absent
+                        </button>
+                        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:px-2">
+                          Mark Attendance
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>

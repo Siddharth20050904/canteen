@@ -29,3 +29,13 @@ model User {
   password      String
   @@map(name: "users")
 }
+
+model Menu {
+  id        Int      @id @default(autoincrement())
+  day       String
+  mealType  String
+  mainCourse String
+  sideDish  String
+  dessert   String
+  beverage  String
+}
