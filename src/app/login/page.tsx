@@ -1,11 +1,11 @@
 // src/app/login/page.tsx
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { loginUser } from '../../../server_actions/loginActions';
-import { Link } from 'lucide-react';
+import { signIn, useSession } from 'next-auth/react';
+import Link from 'next/link';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -13,29 +13,40 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const router = useRouter();
+  const { status } = useSession();
 
-  // Handle form submission
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push('/dashboard');
+    }
+  }, [status, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      // Call the server action to authenticate the user
-      const res = await loginUser({ email, password });
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
 
-      if (res.success) {
+      if (result?.error) {
+        setError('Invalid credentials');
+      } else {
         setSuccessMessage('Login successful!');
         setError(null);
-        setTimeout(() => {
-          router.push('/dashboard'); // Redirect to the dashboard or another page on success
-        }, 1000);
-      } else {
-        setError(res.message || 'Login failed');
+        router.push('/dashboard');
       }
     } catch (err) {
       setError('An error occurred during login');
       console.error('Login error:', err);
     }
   };
+
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Layout noLayout={true}>
@@ -46,7 +57,6 @@ const LoginPage = () => {
           </CardHeader>
           <CardContent>
             {error && <p className="text-red-500">{error}</p>}
-            {/* remove the error if success message is displayed */}
             {successMessage && <p className="text-green-500">{successMessage}</p>}
             <form onSubmit={handleSubmit} className="space-y-4 bg-gray-200 rounded-lg p-4">
               <div>

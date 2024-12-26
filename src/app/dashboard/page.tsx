@@ -1,27 +1,41 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, ChefHat, MessageSquare, Star, TrendingUp} from "lucide-react";
 import { Layout } from '@/components/layout/Layout';
 import { currentDayMenuData } from '../../../data/menuData';
 
 const DashboardPage = () => {
-  const stats = [
-    { title: "Daily Attendance", value: "85%", icon: Calendar },
-    { title: "Menu Rating", value: "4.2", icon: Star },
-    { title: "Reviews Given", value: "12", icon: MessageSquare },
-    { title: "Meals This Month", value: "45", icon: ChefHat }
-  ];
+  const router = useRouter();
+  const { status } = useSession();
   const [todayMenu, setTodayMenu] = React.useState<{ meal: string; items: string; time: string }[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push('/login');
+      return;
+    }
+
     const fetchMenu = async () => {
       const menuData = await currentDayMenuData();
       setTodayMenu(menuData);
     };
 
     fetchMenu();
-  }, []);
+  }, [status, router]);
+
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+
+  const stats = [
+    { title: "Daily Attendance", value: "85%", icon: Calendar },
+    { title: "Menu Rating", value: "4.2", icon: Star },
+    { title: "Reviews Given", value: "12", icon: MessageSquare },
+    { title: "Meals This Month", value: "45", icon: ChefHat }
+  ];
 
   return (
     <Layout>

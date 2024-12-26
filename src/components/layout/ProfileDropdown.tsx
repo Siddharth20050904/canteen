@@ -1,10 +1,13 @@
 "use client";
 import { User, LogOut, Settings } from 'lucide-react';
 import { useState } from 'react';
+import { signOut, useSession } from 'next-auth/react';
+import React from 'react';
 
 export const ProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
-
+  const { data: session } = useSession();
+  
   return (
     <div className="relative">
       <button
@@ -14,7 +17,7 @@ export const ProfileDropdown = () => {
         <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
           <User className="w-5 h-5" />
         </div>
-        <span>John Doe</span>
+        <span>{session?.user?.name}</span>
       </button>
 
       {isOpen && (
@@ -28,7 +31,7 @@ export const ProfileDropdown = () => {
               <Settings className="w-4 h-4" />
               <span>Settings</span>
             </a>
-            <button className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 text-red-600">
+            <button className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 text-red-600" onClick={() => signOut()}>
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
             </button>
