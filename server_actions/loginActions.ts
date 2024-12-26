@@ -21,7 +21,7 @@ export async function loginUser(data: { email: string; password: string }) {
     }
 
     // Compare the entered password with the hashed password in the database
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password || '');
 
     if (isPasswordValid) {
       return { success: true, message: 'Login successful', user };
