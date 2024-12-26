@@ -149,10 +149,10 @@ const MenuManagementPage = () => {
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                     required
                   >
-                    <option>Breakfast</option>
-                    <option>Lunch</option>
-                    <option>Snack</option>
-                    <option>Dinner</option>
+                    <option value={"breakfast"}>Breakfast</option>
+                    <option value={"lunch"}>Lunch</option>
+                    <option value={"snacks"}>Snack</option>
+                    <option value={"dinner"}>Dinner</option>
                   </select>
                 </div>
               </div>

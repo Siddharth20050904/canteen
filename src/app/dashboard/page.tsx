@@ -1,7 +1,9 @@
+"use client";
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, ChefHat, MessageSquare, Star, TrendingUp} from "lucide-react";
 import { Layout } from '@/components/layout/Layout';
+import { currentDayMenuData } from '../../../data/menuData';
 
 const DashboardPage = () => {
   const stats = [
@@ -10,12 +12,16 @@ const DashboardPage = () => {
     { title: "Reviews Given", value: "12", icon: MessageSquare },
     { title: "Meals This Month", value: "45", icon: ChefHat }
   ];
+  const [todayMenu, setTodayMenu] = React.useState<{ meal: string; items: string; time: string }[]>([]);
 
-  const todayMenu = [
-    { meal: "Breakfast", items: "Idli, Sambar, Chutney", time: "7:30 - 9:00" },
-    { meal: "Lunch", items: "Rice, Dal, Vegetables", time: "12:30 - 2:00" },
-    { meal: "Dinner", items: "Chapati, Curry, Salad", time: "7:30 - 9:00" },
-  ];
+  React.useEffect(() => {
+    const fetchMenu = async () => {
+      const menuData = await currentDayMenuData();
+      setTodayMenu(menuData);
+    };
+
+    fetchMenu();
+  }, []);
 
   return (
     <Layout>

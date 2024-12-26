@@ -2,12 +2,21 @@
 "use client";
 import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
-import { weeklyMenu, DayMenu, Meal } from '../../../data/menuData';
+import { fetchMenuData, DayMenu, Meal } from '../../../data/menuData';
 import EditOverlay from '@/components/layout/EditOverlay';
 
 const WeeklyMenuPage = () => {
   const [editing, setEditing] = useState<{ day: string, mealType: string } | null>(null);
   const [meal, setMeal] = useState<Meal>({ mainCourse: '', sideDish: '', dessert: '', beverage: '' });
+  const [weeklyMenuData, setWeeklyMenuData] = useState({} as Record<string, DayMenu>);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      const data = await fetchMenuData();
+      setWeeklyMenuData(data);
+    };
+    fetchData();
+  }, []);
 
   const handleEditClick = (day: string, mealType: string, meal: Meal) => {
     setEditing({ day, mealType });
@@ -17,8 +26,13 @@ const WeeklyMenuPage = () => {
   const handleSave = () => {
     if (editing) {
       const { day, mealType } = editing;
-      // Update the meal in the weeklyMenu object (you may want to handle this with state and a more robust update mechanism)
-      weeklyMenu[day][mealType as keyof DayMenu] = meal;
+      setWeeklyMenuData(prevMenu => ({
+        ...prevMenu,
+        [day]: {
+          ...prevMenu[day],
+          [mealType]: meal
+        }
+      }));
       setEditing(null);
     }
   };
@@ -86,7 +100,7 @@ const WeeklyMenuPage = () => {
               </tr>
             </thead>
             <tbody>
-              {Object.entries(weeklyMenu).map(([day, menu]) => (
+              {Object.entries(weeklyMenuData).map(([day, menu]) => (
                 <tr key={day}>
                   <td className="border px-4 py-2 font-bold">{day}</td>
                   <td className="border px-4 py-2">{renderMeal(menu.breakfast, day, 'breakfast')}</td>
