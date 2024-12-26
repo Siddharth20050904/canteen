@@ -62,8 +62,6 @@ const MenuManagementPage = () => {
       setMenuItems([...menuItems, newItem]);
     }
 
-    console.log('Adding meal:', newItem);
-
     addMeal(newItem);
     
     setIsEditing(false);
