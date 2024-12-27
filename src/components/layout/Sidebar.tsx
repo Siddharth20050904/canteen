@@ -1,20 +1,42 @@
 "use client";
-import { useEffect } from 'react';
-import { Home, Calendar, MessageSquare, Settings, Lightbulb } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Home, Calendar, MessageSquare, Settings, Lightbulb, BookOpenText, CalendarSearch, ChartPie, ChartColumnBig, SquarePen } from 'lucide-react';
+import { getSession } from 'next-auth/react';
 
 interface SidebarProps {
-    isMobileOpen: boolean;
-    setIsMobileOpen: (isOpen: boolean) => void;
+  isMobileOpen: boolean;
+  setIsMobileOpen: (isOpen: boolean) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, setIsMobileOpen }) => {
+  const [userType, setUserType] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const fetchUserType = async () => {
+      const session = await getSession();
+      const type = session?.user.userType || ' ';
+      setUserType(type);
+    };
+
+    fetchUserType();
+  }, []);
+  console.log(userType)
+
   const menuItems = [
     { icon: Home, label: 'Dashboard', href: '/dashboard' },
     { icon: Calendar, label: 'Attendance', href: '/attendance' },
     { icon: MessageSquare, label: 'Feedback', href: '/feedback' },
     { icon: Settings, label: 'Settings', href: '/settings' },
     { icon: Lightbulb, label: 'Suggestions', href: '/suggestions' }, // Added Suggestions option
+    { icon: CalendarSearch, label: 'Weekly Menu', href: '/weekly-menu' },
+    { icon: BookOpenText, label: 'Review Suggestions', href: '/review-suggestion' },
+    { icon: ChartPie, label: 'Feedback Analysis', href: '/feedback-analysis' },
+    { icon: ChartColumnBig, label: 'Attendance Stats', href: '/attendance-stats' },
   ];
+
+  if (userType === 'admin') {
+    menuItems.push({ icon: SquarePen, label: 'Menu Management', href: '/menu-management' });
+  }
 
   useEffect(() => {
     const handleResize = () => {
@@ -31,7 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, setIsMobileOpen 
     <>
       {/* Mobile Overlay */}
       {isMobileOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
