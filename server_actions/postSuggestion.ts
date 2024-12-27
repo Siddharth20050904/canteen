@@ -9,13 +9,16 @@ export async function postSuggestion(formData: FormData) {
   const category = formData.get("category") as string | null;
   const description = formData.get("description") as string | null;
   const userId = formData.get("userId") as string | null;
+  const username = formData.get("username") as string | null;
     try {
         const suggestion = await prisma.suggestion.create({
             data: {
                 name: dish_name || '',
                 mealType: category || '',
                 description: description || '',
-                userId: userId || ''
+                userId: userId || '',
+                username: username || '',
+                status: 'pending', // or any default value appropriate for your application
             }
         });
         if (!suggestion) {

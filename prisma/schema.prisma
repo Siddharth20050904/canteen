@@ -32,6 +32,8 @@ model User {
   reviews       Review[] 
   Suggestion Suggestion[]
   Attendance Attendance[]
+  likedSuggestion Suggestion[] @relation("likedSuggestion")
+  dislikedSuggestion Suggestion[] @relation("dislikedSuggestion")
 }
 
 model Review {
@@ -52,12 +54,16 @@ model Suggestion {
   mealType  String
   name      String
   description String
-  like     Int      @default(0)
-  dislike  Int      @default(0)
+  likes     Int      @default(0)
+  dislikes  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  username  String
   user      User     @relation(fields: [userId], references: [id])
   userId    String
+  likedBy   User[]   @relation("likedSuggestion")
+  dislikedBy User[]  @relation("dislikedSuggestion")
+  status   String   // 'pending' or 'approved' or 'rejected'
 }
 
 model Attendance {
