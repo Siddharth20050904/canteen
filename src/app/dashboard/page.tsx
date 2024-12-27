@@ -3,17 +3,21 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, ChefHat, MessageSquare, Star, TrendingUp} from "lucide-react";
+import { Calendar, ChefHat, MessageSquare, TrendingUp} from "lucide-react";
 import { Layout } from '@/components/layout/Layout';
 import { currentDayMenuData } from '../../../data/menuData';
+import { getAttendanceStatsByUserId } from '../../../data/userAttendaneStats';
+import { getTotalReviewsByUserId } from '../../../server_actions/fetchRevByUserId';
 
 const DashboardPage = () => {
   const router = useRouter();
-  const { status } = useSession();
+  const session = useSession();
   const [todayMenu, setTodayMenu] = React.useState<{ meal: string; items: string; time: string }[]>([]);
+  const [attendanceStats, setAttendanceStats] = React.useState<{ present: number; total: number }>({ present: 0, total: 0 });
+  const [totalReviews, setTotalReviews] = React.useState<number>(0);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (session.status === "unauthenticated") {
       router.push('/login');
       return;
     }
@@ -24,17 +28,38 @@ const DashboardPage = () => {
     };
 
     fetchMenu();
-  }, [status, router]);
+  }, [session.status, router]);
 
-  if (status === "loading") {
+  useEffect(() => {
+    const fetchAttendanceStats = async () => {
+      if (session.status === "authenticated") {
+        const userId = session.data.user.id; // Replace with the actual user ID
+        const stats = await getAttendanceStatsByUserId(userId);
+        setAttendanceStats(stats);
+      }
+    };
+    fetchAttendanceStats();
+  }, [session.status, session.data]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (session.status === "authenticated") {
+        const userId = session.data.user.id; // Replace with the actual user ID
+        const totalRev = await getTotalReviewsByUserId(userId);
+        setTotalReviews(totalRev);
+      }
+    };
+    fetchUser();
+  }, [session.status, session.data]);
+
+  if (session.status === "loading") {
     return <div>Loading...</div>;
   }
 
   const stats = [
-    { title: "Daily Attendance", value: "85%", icon: Calendar },
-    { title: "Menu Rating", value: "4.2", icon: Star },
-    { title: "Reviews Given", value: "12", icon: MessageSquare },
-    { title: "Meals This Month", value: "45", icon: ChefHat }
+    { title: "Attendance", value: `${(attendanceStats.present / attendanceStats.total)*100}%`, icon: Calendar },
+    { title: "Reviews Given", value: totalReviews, icon: MessageSquare },
+    { title: "Total Meals", value: attendanceStats.present , icon: ChefHat }
   ];
 
   return (
@@ -50,7 +75,7 @@ const DashboardPage = () => {
         {/* Main Content */}
         <main className="p-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3 mb-6">
             {stats.map((stat) => (
               <Card key={stat.title}>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">

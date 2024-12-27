@@ -1,66 +1,62 @@
 // src/app/suggestions/page.tsx
+"use client";
 import React from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ThumbsUp, ThumbsDown, ChefHat, Clock, Check, X } from 'lucide-react';
-
-interface SuggestionType {
-  id: string;
-  dish: string;
-  description: string;
-  category: string;
-  votes: number;
-  status: 'pending' | 'approved' | 'rejected';
-  submittedBy: string;
-  date: string;
-}
+import {ChefHat} from 'lucide-react';
+import { postSuggestion } from '../../../server_actions/postSuggestion';
+import { getSession } from 'next-auth/react';
 
 const SuggestionsPage = () => {
   // Sample suggestions data - replace with actual data from your backend
-  const suggestions: SuggestionType[] = [
-    {
-      id: '1',
-      dish: 'Paneer Butter Masala',
-      description: 'Rich and creamy paneer dish with tomato gravy.',
-      category: 'Main Course',
-      votes: 45,
-      status: 'pending',
-      submittedBy: 'John Doe',
-      date: 'Dec 24, 2024'
-    },
-    {
-      id: '2',
-      dish: 'Mixed Fruit Salad',
-      description: 'Fresh fruits with honey dressing.',
-      category: 'Dessert',
-      votes: 32,
-      status: 'approved',
-      submittedBy: 'Jane Smith',
-      date: 'Dec 23, 2024'
-    }
-  ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-yellow-100 text-yellow-800';
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // Handle form submission here
+
+    const formData = new FormData(event.currentTarget);
+
+    const session = await getSession();
+    const user_id = session?.user?.id;
+
+    const formObject = Object.fromEntries(formData.entries());
+    const formDataWithUserId = new FormData();
+    Object.entries(formObject).forEach(([key, value]) => {
+      formDataWithUserId.append(key, value as string);
+    });
+    formDataWithUserId.append('userId', user_id || '');
+
+    const newSuggestion = await postSuggestion(formDataWithUserId);
+
+    if(newSuggestion?.success){
+      window.location.reload();
+    }else{
+      alert(newSuggestion?.message);
     }
+
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <Check className="w-4 h-4" />;
-      case 'rejected':
-        return <X className="w-4 h-4" />;
-      default:
-        return <Clock className="w-4 h-4" />;
-    }
-  };
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case 'approved':
+  //       return 'bg-green-100 text-green-800';
+  //     case 'rejected':
+  //       return 'bg-red-100 text-red-800';
+  //     default:
+  //       return 'bg-yellow-100 text-yellow-800';
+  //   }
+  // };
+
+  // const getStatusIcon = (status: string) => {
+  //   switch (status) {
+  //     case 'approved':
+  //       return <Check className="w-4 h-4" />;
+  //     case 'rejected':
+  //       return <X className="w-4 h-4" />;
+  //     default:
+  //       return <Clock className="w-4 h-4" />;
+  //   }
+  // };
 
   return (
     <Layout>
@@ -80,7 +76,7 @@ const SuggestionsPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -90,18 +86,18 @@ const SuggestionsPage = () => {
                     type="text"
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter dish name"
+                    name='dish'
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Category
                   </label>
-                  <select className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option>Breakfast</option>
-                    <option>Main Course</option>
-                    <option>Side Dish</option>
-                    <option>Dessert</option>
-                    <option>Beverage</option>
+                  <select className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500" name='category'>
+                    <option value={'mainCourse'}>Main Course</option>
+                    <option value={'sideDish'}>Side Dish</option>
+                    <option value={'dessert'}>Dessert</option>
+                    <option value={'beverage'}>Beverage</option>
                   </select>
                 </div>
               </div>
@@ -113,14 +109,11 @@ const SuggestionsPage = () => {
                 <textarea 
                   className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[100px]"
                   placeholder="Describe the dish and why it should be added..."
+                  name='description'
                 />
               </div>
               
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                    <input type="checkbox" id="vegetarian" className="rounded" />
-                    <label htmlFor="vegetarian">This is a vegetarian dish</label>
-                </div>
                 <button
                   type="submit"
                   className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
@@ -155,7 +148,7 @@ const SuggestionsPage = () => {
           </select>
         </div>
 
-        {/* Suggestions List */}
+        {/* Suggestions List
         <div className="space-y-4">
           {suggestions.map((suggestion) => (
             <Card key={suggestion.id}>
@@ -191,7 +184,7 @@ const SuggestionsPage = () => {
               </CardContent>
             </Card>
           ))}
-        </div>
+        </div> */}
 
         {/* Load More Button */}
         <div className="flex justify-center">
