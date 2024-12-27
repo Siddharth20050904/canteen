@@ -18,3 +18,19 @@ export async function getUserByEmail(email: string) {
     return null
   }
 }
+
+
+export async function getUserById(id: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: id
+      }
+    })
+    return user;
+  }
+  catch (error) {
+    console.error("Error fetching user by id:", error)
+    return null;
+  }
+}
