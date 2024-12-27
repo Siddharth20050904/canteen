@@ -1,20 +1,32 @@
 // src/app/attendance-stats/page.tsx
 "use client";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pie, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { getFormattedWeeklyAttendance , getFormattedTotalWeeklyAttendance, AttendanceData} from '../../../data/getWeeklyAttendance';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 const AttendanceStatsPage = () => {
   // Pie chart data for overall attendance status (attended vs missed)
+  const [present, setPresent] = useState(0);
+  const [absent, setAbsent] = useState(0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const totalAttendance = await getFormattedTotalWeeklyAttendance();
+      setPresent(totalAttendance.totalPresent);
+      setAbsent(totalAttendance.totalAbsent);
+    };
+    fetchData();
+  }, []);
   const pieData = {
     labels: ['Attended', 'Missed'],
     datasets: [
       {
-        data: [80, 20], // 80% attended, 20% missed
+        data: [present, absent], // 80% attended, 20% missed
         backgroundColor: ['#4CAF50', '#F44336'],
         hoverBackgroundColor: ['#66BB6A', '#EF5350'],
       },
@@ -22,24 +34,43 @@ const AttendanceStatsPage = () => {
   };
 
   // Bar chart data for attendance by day of the week
-  const barData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+  const  [data, setData ] = useState<AttendanceData[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const weeklyAttendanceData = await getFormattedWeeklyAttendance();
+      setData(weeklyAttendanceData);
+    };
+    fetchData();
+  }, []);
+
+  const chartData = {
+    labels: data.map(d => d.day),
     datasets: [
       {
-        label: 'Attendance (No. of Students)',
-        data: [150, 130, 170, 160, 140],
-        backgroundColor: '#4CAF50', // Green color for attended
-        borderColor: '#388E3C',
-        borderWidth: 1,
+        label: 'Present',
+        data: data.map(d => d.present),
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
       },
       {
-        label: 'Missed (No. of Students)',
-        data: [10, 30, 20, 15, 25],
-        backgroundColor: '#F44336', // Red color for missed
-        borderColor: '#D32F2F',
-        borderWidth: 1,
+        label: 'Absent',
+        data: data.map(d => d.absent),
+        backgroundColor: 'rgba(255, 99, 132, 0.6)',
       },
     ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: true,
+        text: 'Weekly Attendance Stats',
+      },
+    },
   };
 
   return (
@@ -75,32 +106,12 @@ const AttendanceStatsPage = () => {
             <CardContent>
               <div className="flex justify-center">
                 <div className="w-full max-w-[600px] h-[400px]">
-                  <Bar data={barData} options={{ maintainAspectRatio: false }} />
+                  <Bar data={chartData} options={options} />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Attendance Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Attendance Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p>
-                The overall attendance rate is quite high with 80% of students attending classes regularly. 
-                The lowest attendance was recorded on Wednesday, possibly due to external factors like exams or events.
-              </p>
-              <ul className="list-disc pl-5">
-                <li>Monday has the highest attendance, with a slight dip in the following days.</li>
-                <li>Friday shows a moderate drop in attendance, likely due to weekend fatigue.</li>
-                <li>Missed classes on certain days can be attributed to unforeseen absences or scheduling conflicts.</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </Layout>
   );

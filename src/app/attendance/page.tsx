@@ -106,7 +106,7 @@ const AttendancePage = () => {
   const stats = [
     { title: 'Total Meal', value: `${attendanceStats.total}`, icon: Calendar },
     { title: 'Meals Present', value: `${attendanceStats.present}`, icon: Check },
-    { title: 'Attendance %', value: `${(attendanceStats.present/attendanceStats.total)*100}`, icon: X },
+    { title: 'Attendance %', value: `${((attendanceStats.present/attendanceStats.total)*100).toFixed(2) }`, icon: X },
   ];
 
   const getStatusColor = (meal: MealType, attendance: Attendance[]) => {

@@ -18,13 +18,11 @@ const SuggestionsPage = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Handle form submission here
-
     const formData = new FormData(event.currentTarget);
-
+  
     const session = await getSession();
     const user_id = session?.user?.id;
-
+  
     const formObject = Object.fromEntries(formData.entries());
     const formDataWithUserId = new FormData();
     Object.entries(formObject).forEach(([key, value]) => {
@@ -33,16 +31,32 @@ const SuggestionsPage = () => {
     formDataWithUserId.append('userId', user_id || '');
     formDataWithUserId.append('username', session?.user?.name || '');
 
-    const newSuggestion = await postSuggestion(formDataWithUserId);
-
-    if(newSuggestion?.success){
-      window.location.reload();
-    }else{
-      alert(newSuggestion?.message);
+      // Find the maximum ID from the current suggestions
+    const maxId = suggestions.length > 0 ? Math.max(...suggestions.map(s => s.id)) : 0;
+  
+    // Optimistically update the state
+    const newSuggestion = {
+      id: maxId + 1, // Temporary ID
+      name: formObject.dish as string,
+      mealType: formObject.category as string,
+      description: formObject.description as string,
+      userId: user_id || '',
+      username: session?.user?.name || '',
+      likes: 0,
+      dislikes: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: 'pending',
+    };
+  
+    setSuggestions([newSuggestion, ...suggestions]);
+  
+    const response = await postSuggestion(formDataWithUserId);
+    if (!response || !response.success) {
+      // Revert the state if the API call fails
+      setSuggestions(suggestions);
     }
-
   };
-
   useEffect(() => {
     const fetchLikedSuggestionsFromBackend = async () => {
       const session = await getSession();
@@ -96,24 +110,90 @@ const SuggestionsPage = () => {
     const session = await getSession();
     const userId = session?.user?.id;
 
-    const res = await updateLikes(suggestionId, userId || '');
+    if (!userId) {
+      return;
+    }
 
-    if (res?.success) {
-      setLikedSuggestions([...likedSuggestions, suggestionId]);
-      window.location.reload();
+    if(likedSuggestions.includes(suggestionId)){
+      return;
+    }
+
+    // Optimistically update the state
+    setLikedSuggestions([...likedSuggestions, suggestionId]);
+    setDislikedSuggestions(dislikedSuggestions.filter(id => id !== suggestionId));
+    setSuggestions(suggestions.map(suggestion => {
+      if (suggestion.id === suggestionId) {
+        return {
+          ...suggestion,
+          likes: suggestion.likes + 1,
+          dislikes: suggestion.dislikes > 0 ? suggestion.dislikes - 1 : suggestion.dislikes
+        };
+      }
+      return suggestion;
+    }));
+
+    const response = await updateLikes(suggestionId, userId || '');
+    if (!response.success) {
+      // Revert the state if the API call fails
+      setLikedSuggestions(likedSuggestions);
+      setDislikedSuggestions([...dislikedSuggestions, suggestionId]);
+      setSuggestions(suggestions.map(suggestion => {
+        if (suggestion.id === suggestionId && !dislikedSuggestions.includes(suggestionId)) {
+          return {
+            ...suggestion,
+            likes: suggestion.likes - 1,
+            dislikes: suggestion.dislikes + 1
+          };
+        }
+        return suggestion;
+      }));
     }
   };
 
   const handleDislike = async (suggestionId: number) => {
     const session = await getSession();
     const userId = session?.user?.id;
-    const res = await updateDislikes(suggestionId, userId || '');
-    if (res?.success) {
-      window.location.reload();
+
+    if (!userId) {
+      // Handle unauthenticated user case
+      return;
+    }
+
+    if(dislikedSuggestions.includes(suggestionId)){
+      return;
+    }
+
+    // Optimistically update the state
+    setDislikedSuggestions([...dislikedSuggestions, suggestionId]);
+    setLikedSuggestions(likedSuggestions.filter(id => id !== suggestionId));
+    setSuggestions(suggestions.map(suggestion => {
+      if (suggestion.id === suggestionId) {
+        return {
+          ...suggestion,
+          dislikes: suggestion.dislikes + 1,
+          likes: suggestion.likes > 0 ? suggestion.likes - 1 : suggestion.likes
+        };
+      }
+      return suggestion;
+    }));
+
+    const response = await updateDislikes(suggestionId, userId || '');
+    if (!response.success) {
+      // Revert the state if the API call fails
+      setDislikedSuggestions(dislikedSuggestions);
+      setLikedSuggestions([...likedSuggestions, suggestionId]);
+      setSuggestions(suggestions.map(suggestion => {
+        if (suggestion.id === suggestionId) {
+          return {
+            ...suggestion,
+            dislikes: suggestion.dislikes - 1,
+            likes: suggestion.likes + 1
+          };
+        }
+        return suggestion;
+      }));
     }
   };
-
-  console.log(likedSuggestions);
 
   return (
     <Layout>
@@ -144,13 +224,14 @@ const SuggestionsPage = () => {
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter dish name"
                     name='dish'
+                    required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Category
                   </label>
-                  <select className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500" name='category'>
+                  <select className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500" name='category' required>
                     <option value={'mainCourse'}>Main Course</option>
                     <option value={'sideDish'}>Side Dish</option>
                     <option value={'dessert'}>Dessert</option>
@@ -167,6 +248,7 @@ const SuggestionsPage = () => {
                   className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[100px]"
                   placeholder="Describe the dish and why it should be added..."
                   name='description'
+                  required
                 />
               </div>
               

@@ -42,3 +42,21 @@ export async function getAttendance(userId: string) {
     throw error;
   }
 }
+
+export async function getWeekAttendance() {
+  const today = new Date();
+  const startOfWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
+  try {
+    const attendance = await prisma.attendance.findMany({
+      where: {
+        markedAt: {
+          gte: startOfWeek
+        }
+      }
+    });
+    return attendance;
+  } catch (error) {
+    console.error('Error fetching attendance:', error);
+    throw error;
+  }
+}

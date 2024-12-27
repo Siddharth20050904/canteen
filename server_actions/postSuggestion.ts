@@ -23,6 +23,8 @@ export async function postSuggestion(formData: FormData) {
         });
         if (!suggestion) {
             return {success: false, message: 'Failed to post suggestion'};
+        }else{
+            return { suggestion , success: true};
         }
         return {success: true, message: 'Suggestion posted successfully'};
     } catch (error) {

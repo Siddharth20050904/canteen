@@ -18,3 +18,13 @@ export async function getTopThreeSuggestions() {
     return null;
   }
 }
+
+export async function getAllSuggestions() {
+  try {
+    const suggestions = await prisma.suggestion.findMany({});
+    return suggestions;
+  } catch (error) {
+    console.error("Error fetching suggestions:", error);
+    return null;
+  }
+}
