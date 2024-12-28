@@ -30,7 +30,7 @@ const ProfilePage = () => {
       const userId = session?.user.id;
       const userData = await getUserById(userId || '');
       setUser(userData);
-      const suggestionData = await getTopThreeSuggestionsByUserId(parseInt(userId || ''));
+      const suggestionData = await getTopThreeSuggestionsByUserId(userId || '');
       setSuggestions(suggestionData || []);
     };
     fetchUser();

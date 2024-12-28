@@ -43,7 +43,7 @@ export interface Suggestion {
   status: string;
 }
 
-export async function getTopThreeSuggestionsByUserId(userId: number): Promise<Suggestion[] | null> {
+export async function getTopThreeSuggestionsByUserId(userId: string): Promise<Suggestion[] | null> {
   try {
     const suggestions: Suggestion[] = await prisma.suggestion.findMany({
       where: {
