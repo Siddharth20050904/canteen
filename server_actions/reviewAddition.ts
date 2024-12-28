@@ -18,6 +18,19 @@ export async function addReview(review: {
             throw new Error("Missing required fields");
         }
 
+        // Fetch current rating and number of reviews for the meal
+        const menu = await prisma.menu.findFirst({
+            where: { mealType: review.meal, day: review.day},
+        });
+
+        if (!menu) {
+            throw new Error("No menu found for this meal");
+        }
+
+        if (!(menu[review.category as keyof typeof menu])) {
+            throw new Error(`Menu does not have a valid ${review.category}`);
+        }
+
         // Create new review
         const newReview = await prisma.review.create({
             data: {
@@ -30,10 +43,7 @@ export async function addReview(review: {
             },
         });
 
-        // Fetch current rating and number of reviews for the meal
-        const menu = await prisma.menu.findFirst({
-            where: { mealType: review.meal, day: review.day },
-        });
+        
 
         if (!menu) {
             throw new Error("Meal not found in menu");

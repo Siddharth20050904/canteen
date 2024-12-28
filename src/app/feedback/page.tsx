@@ -29,12 +29,12 @@ const FeedbackPage = () => {
       day: formData.get('day') as string,
     };
 
-    console.log(review);
-
     const response = await addReview(review);
     if (response.success) {
       await logActivity(session.user.id, 'Submitted a feedback', 'feedback');
       window.location.reload(); 
+    }else{
+      alert('Failed to submit feedback');
     }
   };
 
