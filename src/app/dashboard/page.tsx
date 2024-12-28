@@ -66,7 +66,7 @@ const DashboardPage = () => {
       if (session.status === "authenticated") {
         const userId = session.data.user.id; // Replace with the actual user ID
         const activity = await recentActivityByUserId(userId);
-        setRecentActivity(activity.map(ele => ({
+        setRecentActivity(activity.slice(0,3).map(ele => ({
           activity: ele.activity,
           type: ele.type,
           timestamp: (timeNow.getHours() - ele.timestamp.getHours()) >0? timeNow.getHours() - ele.timestamp.getHours() + " hours ago" : (timeNow.getMinutes() - ele.timestamp.getMinutes()) >0? timeNow.getMinutes() - ele.timestamp.getMinutes() + " minutes ago" : "Just now"

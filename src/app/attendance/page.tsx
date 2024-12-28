@@ -205,7 +205,7 @@ const AttendancePage = () => {
                       {meal.status.charAt(0).toUpperCase() + meal.status.slice(1)}
                     </span>
                       {meal.status === 'upcoming' && (
-                        <div>
+                        <div className="flex items-center gap-2">
                           {attendance.find(a => a.mealId === meal.id && a.status === 'present') ? (
                             <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
                               Present
@@ -239,40 +239,6 @@ const AttendancePage = () => {
                   </div>
                 </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
-        {/* Attendance History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Attendance History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="pb-4 text-left">Date</th>
-                    <th className="pb-4 text-left">Meal</th>
-                    <th className="pb-4 text-left">Time</th>
-                    <th className="pb-4 text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...Array(5)].map((_, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="py-4">Dec {20 - index}, 2024</td>
-                      <td className="py-4">Breakfast</td>
-                      <td className="py-4">7:30 AM</td>
-                      <td className="py-4">
-                        <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                          Present
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           </CardContent>
         </Card>
