@@ -4,6 +4,9 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { Sidebar } from './Sidebar';
 import { Menu } from 'lucide-react';
+import  { getSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,6 +14,17 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, noLayout }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const getUserType = async () => {
+    const session = await getSession();
+    const userId = session?.user.id || ''; // Replace with the actual user ID
+    if(!userId && (pathname !== '/login' && pathname !== '/register')) {
+      router.push('/login');
+    }
+  };
+
+  getUserType();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const menuButton = (
@@ -33,7 +47,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, noLayout }) => {
   return (
     <div className="min-h-screen bg-gray-50 text-black">
       <Header menuButton={menuButton} />
-      <Sidebar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
+      <Sidebar isMobileOpen={isMobileOpen} setIsMobileOpenAction={setIsMobileOpen} />
       <main className="lg:ml-64 pt-16 min-h-[calc(100vh-4rem)]">
         <div className="p-6">
           {children}

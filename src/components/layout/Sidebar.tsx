@@ -5,10 +5,10 @@ import { getSession } from 'next-auth/react';
 
 interface SidebarProps {
   isMobileOpen: boolean;
-  setIsMobileOpen: (isOpen: boolean) => void;
+  setIsMobileOpenAction: (isOpen: boolean) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, setIsMobileOpen }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, setIsMobileOpenAction }) => {
   const [userType, setUserType] = useState<string | null>(null);
   
   useEffect(() => {
@@ -20,7 +20,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, setIsMobileOpen 
 
     fetchUserType();
   }, []);
-  console.log(userType)
 
   const menuItems = [
     { icon: Home, label: 'Dashboard', href: '/dashboard' },
@@ -41,13 +40,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, setIsMobileOpen 
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
-        setIsMobileOpen(false);
+        setIsMobileOpenAction(false);
       }
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [setIsMobileOpen]);
+  }, [setIsMobileOpenAction]);
 
   return (
     <>
@@ -55,7 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, setIsMobileOpen 
       {isMobileOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setIsMobileOpen(false)}
+          onClick={() => setIsMobileOpenAction(false)}
         />
       )}
 
@@ -72,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, setIsMobileOpen 
               key={item.href}
               href={item.href}
               className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100"
-              onClick={() => setIsMobileOpen(false)}
+              onClick={() => setIsMobileOpenAction(false)}
             >
               <item.icon className="w-5 h-5" />
               <span>{item.label}</span>

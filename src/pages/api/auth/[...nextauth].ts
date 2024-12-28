@@ -90,6 +90,7 @@ export default NextAuth({
       if (session?.user) {
         session.user.id = token.sub ?? '';
         session.user.userType = token.userType as string | null | undefined; // Add userType to session
+        session.user.name = token.name;
       }
       return session;
     },

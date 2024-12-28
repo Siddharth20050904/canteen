@@ -2,7 +2,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
-import { Clock, Calendar, Check, X } from 'lucide-react';
+import { Clock, Calendar, Check, Percent } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { currentDayMenuData } from '../../../data/menuData';
 import { markAttendance } from '../../../server_actions/attendance';
@@ -106,7 +106,7 @@ const AttendancePage = () => {
   const stats = [
     { title: 'Total Meal', value: `${attendanceStats.total}`, icon: Calendar },
     { title: 'Meals Present', value: `${attendanceStats.present}`, icon: Check },
-    { title: 'Attendance %', value: `${((attendanceStats.present/attendanceStats.total)*100).toFixed(2) }`, icon: X },
+    { title: 'Attendance %', value: `${((attendanceStats.present/attendanceStats.total)*100).toFixed(2) }`, icon: Percent },
   ];
 
   const getStatusColor = (meal: MealType, attendance: Attendance[]) => {

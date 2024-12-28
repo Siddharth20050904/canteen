@@ -28,13 +28,14 @@ model User {
   email         String    @unique
   type          String?   @default("user") // "admin" or "user"
   emailVerified DateTime?
-  image         String?
   password      String?
   reviews       Review[] 
   Suggestion Suggestion[]
   Attendance Attendance[]
   likedSuggestion Suggestion[] @relation("likedSuggestion")
   dislikedSuggestion Suggestion[] @relation("dislikedSuggestion")
+  preferences   String?  @default("vegeterian") // vegeterian, non-vegetarian, vegan, etc.
+  rollNumber    String?
 }
 
 model Review {

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Edit, Trash, PlusCircle } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { addMeal } from '../../../server_actions/mealAddition';
 
 interface MenuItemType {
@@ -35,15 +35,6 @@ const MenuManagementPage = () => {
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [currentItem, setCurrentItem] = useState<MenuItemType | null>(null);
-
-  const handleEdit = (item: MenuItemType) => {
-    setIsEditing(true);
-    setCurrentItem(item);
-  };
-
-  const handleDelete = (id: string) => {
-    setMenuItems(menuItems.filter(item => item.id !== id));
-  };
 
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -163,42 +154,6 @@ const MenuManagementPage = () => {
             </form>
           </CardContent>
         </Card>
-
-        {/* Menu Items List */}
-        <div className="space-y-4">
-          {menuItems.map(item => (
-            <Card key={item.id}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <h3 className="font-medium text-lg">{item.dish}</h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span>{item.category}</span>
-                      <span>•</span>
-                      <span>{item.day}</span>
-                      <span>•</span>
-                      <span>{item.mealType}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <button
-                      className="p-2 hover:bg-gray-100 rounded-full"
-                      onClick={() => handleEdit(item)}
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
-                    <button
-                      className="p-2 hover:bg-gray-100 rounded-full"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      <Trash className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       </div>
     </Layout>
   );

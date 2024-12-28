@@ -75,9 +75,9 @@ const DashboardPage = () => {
         {/* Main Content */}
         <main className="p-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3 mb-6">
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-3 lg:grid-cols-3 mb-6">
             {stats.map((stat) => (
-              <Card key={stat.title}>
+              <Card key={stat.title} className='min-h-[100px]'>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
                     {stat.title}
