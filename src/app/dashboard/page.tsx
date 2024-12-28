@@ -3,11 +3,13 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, ChefHat, MessageSquare, TrendingUp} from "lucide-react";
+import { Calendar, ChefHat, MessageSquare, TrendingUp, Edit3} from "lucide-react";
 import { Layout } from '@/components/layout/Layout';
 import { currentDayMenuData } from '../../../data/menuData';
 import { getAttendanceStatsByUserId } from '../../../data/userAttendaneStats';
 import { getTotalReviewsByUserId } from '../../../server_actions/fetchRevByUserId';
+import { recentActivityByUserId } from '../../../server_actions/logActivity';
+import { deletionJobScheduler } from '../../../server_actions/cron-job';
 
 const DashboardPage = () => {
   const router = useRouter();
@@ -15,6 +17,11 @@ const DashboardPage = () => {
   const [todayMenu, setTodayMenu] = React.useState<{ meal: string; items: string; time: string }[]>([]);
   const [attendanceStats, setAttendanceStats] = React.useState<{ present: number; total: number }>({ present: 0, total: 0 });
   const [totalReviews, setTotalReviews] = React.useState<number>(0);
+  const [recentActivity, setRecentActivity] = React.useState<{ activity: string; type: string; timestamp: string }[]>([]);
+
+  useEffect(() => {
+    deletionJobScheduler();
+  }, []);
 
   useEffect(() => {
     if (session.status === "unauthenticated") {
@@ -52,6 +59,23 @@ const DashboardPage = () => {
     fetchUser();
   }, [session.status, session.data]);
 
+  
+  useEffect(()=>{
+    const fetchRecentActivity = async () => {
+      const timeNow = new Date();
+      if (session.status === "authenticated") {
+        const userId = session.data.user.id; // Replace with the actual user ID
+        const activity = await recentActivityByUserId(userId);
+        setRecentActivity(activity.map(ele => ({
+          activity: ele.activity,
+          type: ele.type,
+          timestamp: (timeNow.getHours() - ele.timestamp.getHours()) >0? timeNow.getHours() - ele.timestamp.getHours() + " hours ago" : (timeNow.getMinutes() - ele.timestamp.getMinutes()) >0? timeNow.getMinutes() - ele.timestamp.getMinutes() + " minutes ago" : "Just now"
+        })));
+      }
+    }
+    fetchRecentActivity();
+  }, [session.status, session.data]);
+
   if (session.status === "loading") {
     return <div>Loading...</div>;
   }
@@ -61,6 +85,7 @@ const DashboardPage = () => {
     { title: "Reviews Given", value: totalReviews, icon: MessageSquare },
     { title: "Total Meals", value: attendanceStats.present , icon: ChefHat }
   ];
+
 
   return (
     <Layout>
@@ -125,25 +150,28 @@ const DashboardPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4 text-black">
-                  <div className="flex items-center gap-4 border-b pb-3">
-                    <div className="bg-blue-100 p-2 rounded-full">
-                      <MessageSquare className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Submitted Lunch Review</h3>
-                      <p className="text-sm text-gray-600">2 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 border-b pb-3">
-                    <div className="bg-green-100 p-2 rounded-full">
-                      <Calendar className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Marked Attendance</h3>
-                      <p className="text-sm text-gray-600">5 hours ago</p>
-                    </div>
-                  </div>
+              <div className="space-y-4 text-black">
+                  {recentActivity.length > 0 ? (
+                    recentActivity.map((activity, index) => (
+                      <div key={index} className="flex items-center gap-4 border-b pb-3">
+                        <div className={`p-2 rounded-full ${activity.type === 'feedback' ? 'bg-blue-100' : activity.type === 'suggestion' ? 'bg-yellow-100' : 'bg-green-100'}`}>
+                        {activity.type === 'feedback' ? (
+                          <MessageSquare className="w-4 h-4 text-blue-600" />
+                        ) : activity.type === 'suggestion' ? (
+                          <Edit3 className="w-4 h-4 text-yellow-600" />
+                        ) : (
+                          <Calendar className="w-4 h-4 text-green-600" />
+                        )}
+                      </div>
+                        <div>
+                          <h3 className="font-medium">{activity.activity}</h3>
+                          <p className="text-sm text-gray-600">{activity.timestamp}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-600">No recent activity</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

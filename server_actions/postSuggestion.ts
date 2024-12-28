@@ -31,3 +31,15 @@ export async function postSuggestion(formData: FormData) {
         console.error(error);
     }
 }
+
+export async function updateSuggestionStatus(suggestionId: number, newStatus: string) {
+    try {
+        const updatedSuggestion = await prisma.suggestion.update({
+            where: { id: suggestionId },
+            data: { status: newStatus },
+        });
+        return updatedSuggestion;
+    } catch (error) {
+        console.error(error);
+    }
+}

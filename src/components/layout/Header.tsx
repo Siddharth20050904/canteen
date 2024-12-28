@@ -1,5 +1,4 @@
 import React from 'react';
-import { Notifications } from './Notifications';
 import { ProfileDropdown } from './ProfileDropdown';
 
 interface HeaderProps {
@@ -16,7 +15,6 @@ export const Header: React.FC<HeaderProps> = ({ menuButton }) => {
           <h1 className="text-xl font-semibold">Mess Management</h1>
         </div>
         <div className="flex items-center gap-4">
-          <Notifications />
           <ProfileDropdown />
         </div>
       </div>

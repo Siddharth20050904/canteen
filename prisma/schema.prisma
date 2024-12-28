@@ -34,6 +34,7 @@ model User {
   Attendance Attendance[]
   likedSuggestion Suggestion[] @relation("likedSuggestion")
   dislikedSuggestion Suggestion[] @relation("dislikedSuggestion")
+  recentActivities recent_activity[]
   preferences   String?  @default("vegeterian") // vegeterian, non-vegetarian, vegan, etc.
   rollNumber    String?
 }
@@ -65,7 +66,7 @@ model Suggestion {
   userId    String
   likedBy   User[]   @relation("likedSuggestion")
   dislikedBy User[]  @relation("dislikedSuggestion")
-  status   String   // 'pending' or 'approved' or 'rejected'
+  status   String   @default("pending")// 'pending' or 'approved' or 'rejected'
 }
 
 model Attendance {
@@ -77,4 +78,13 @@ model Attendance {
   user      User     @relation(fields: [userId], references: [id])
   @@index([userId])
   @@index([mealId])
+}
+
+model recent_activity{
+  id        Int      @id @default(autoincrement())
+  userId    String
+  activity  String
+  type      String
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }

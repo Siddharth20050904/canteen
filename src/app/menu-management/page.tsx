@@ -5,6 +5,8 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { addMeal } from '../../../server_actions/mealAddition';
+import { getSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 interface MenuItemType {
   id: string;
@@ -16,6 +18,23 @@ interface MenuItemType {
 
 const MenuManagementPage = () => {
   // Sample menu items data - replace with actual data from your backend
+  const redirect = useRouter();
+  const [userType, setUserType] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    const fetchSession = async () => {
+      const session = await getSession();
+      setUserType(session?.user?.userType || null);
+    };
+    fetchSession();
+  }, []);
+
+  React.useEffect(() => {
+    if (userType === 'user') {
+      redirect.push('/dashboard');
+    }
+  }, [userType, redirect]);
+
   const [menuItems, setMenuItems] = useState<MenuItemType[]>([
     {
       id: '1',

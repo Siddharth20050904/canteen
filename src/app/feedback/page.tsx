@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star } from 'lucide-react';
 import { addReview } from '../../../server_actions/reviewAddition';
 import { useSession } from 'next-auth/react';
+import { logActivity } from '../../../server_actions/logActivity';
 
 const FeedbackPage = () => {
   const { data: session } = useSession();
@@ -32,6 +33,7 @@ const FeedbackPage = () => {
 
     const response = await addReview(review);
     if (response.success) {
+      await logActivity(session.user.id, 'Submitted a feedback', 'feedback');
       window.location.reload(); 
     }
   };

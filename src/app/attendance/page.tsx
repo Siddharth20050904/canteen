@@ -10,6 +10,7 @@ import { useSession } from 'next-auth/react';
 import { getTodayAttendance } from '../../../data/getTodayAttendance';
 import { Attendance } from '@prisma/client';
 import { getAttendanceStatsByUserId } from '../../../data/userAttendaneStats';
+import { logActivity } from '../../../server_actions/logActivity';
 
 interface MealType {
   id: string;
@@ -135,6 +136,8 @@ const AttendancePage = () => {
         throw new Error('User ID is undefined');
       }
       await markAttendance(userId, mealId, status);
+
+      await logActivity(userId, `Marked attendance for ${mealId} as ${status}`, 'attendance');
 
       // Update local state to reflect the change
       setTodayMeals(prevMeals => 

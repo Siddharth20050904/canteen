@@ -9,6 +9,7 @@ import { getSession } from 'next-auth/react';
 import { getTopThreeSuggestions } from '../../../server_actions/getSuggestion';
 import { Suggestion } from '@prisma/client';
 import { updateLikes, updateDislikes, getLikesByUserId, getDislikesByUserId } from '../../../server_actions/upDateLikes';
+import { logActivity } from '../../../server_actions/logActivity';
 
 const SuggestionsPage = () => {
   // Sample suggestions data - replace with actual data from your backend
@@ -55,6 +56,8 @@ const SuggestionsPage = () => {
     if (!response || !response.success) {
       // Revert the state if the API call fails
       setSuggestions(suggestions);
+    }else{
+      await logActivity(user_id || '', 'Suggestion created', 'suggestion');
     }
   };
   useEffect(() => {

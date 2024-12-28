@@ -7,6 +7,7 @@ import { Suggestion } from '@prisma/client';
 import { getAllSuggestions } from '../../../server_actions/getSuggestion';
 import { getSession } from 'next-auth/react';
 import { updateLikes, updateDislikes, getLikesByUserId, getDislikesByUserId } from '../../../server_actions/upDateLikes';
+import { updateSuggestionStatus } from '../../../server_actions/postSuggestion';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -17,6 +18,17 @@ const ReviewSuggestionsPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [likedSuggestions, setLikedSuggestions] = useState<number[]>([]);
   const [dislikedSuggestions, setDislikedSuggestions] = useState<number[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const session = await getSession();
+      if (session?.user?.userType === 'admin') {
+        setIsAdmin(true);
+      }
+    };
+    fetchUserInfo();
+  }, []);
 
   const fetchSuggestions = async (page: number) => {
     try {
@@ -273,6 +285,36 @@ const ReviewSuggestionsPage = () => {
     }
   };
 
+  const handleAccept = async (suggestionId: number) => {
+    const updatedSuggestions = suggestions.map(suggestion =>
+      suggestion.id === suggestionId ? { ...suggestion, status: 'approved' } : suggestion
+    );
+    setSuggestions(updatedSuggestions);
+
+    try {
+      await updateSuggestionStatus(suggestionId, 'approved');
+    } catch (error) {
+      setSuggestions(suggestions);
+      console.error('Error updating suggestion status:', error);
+    }
+  };
+
+  const handleReject = async (suggestionId: number) => {
+    const updatedSuggestions = suggestions.map(suggestion =>
+      suggestion.id === suggestionId ? { ...suggestion, status: 'rejected' } : suggestion
+    );
+    setSuggestions(updatedSuggestions);
+    try {
+      await updateSuggestionStatus(suggestionId, 'rejected');
+    } catch (error) {
+      setSuggestions(suggestions);
+      console.error('Error updating suggestion status:', error);
+    }
+
+    // Implement the logic to reject the suggestion
+    console.log(`Rejected suggestion with ID: ${suggestionId}`);
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -300,6 +342,22 @@ const ReviewSuggestionsPage = () => {
                           </span>
                         </div>
                         <p className="text-gray-600">{suggestion.description}</p>
+                        {isAdmin && suggestion.status === 'pending' && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleAccept(suggestion.id)}
+                              className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleReject(suggestion.id)}
+                              className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
                         <div className="flex items-center gap-4 text-sm text-gray-500">
                           <span>By: {suggestion.username}</span>
                           <span>•</span>
