@@ -1,33 +1,46 @@
 // src/app/profile/page.tsx
+"use client";
+import { useEffect, useState } from 'react';
 import React from 'react';
-import Image from 'next/image';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getUserById } from '../../../server_actions/userFetch';
+import { getTopThreeSuggestionsByUserId, Suggestion} from '../../../server_actions/getSuggestion';
+import { getSession } from 'next-auth/react';
+
+interface User {
+  id: string;
+  name: string | null;
+  email: string;
+  type: string | null;
+  emailVerified: Date | null;
+  password: string | null;
+  preferences: string | null;
+  rollNumber: string | null;
+}
 
 const ProfilePage = () => {
-  // Sample profile data - replace with actual data from your backend
+  const [user, setUser] = useState<User | null>(null);
+
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const session = await getSession();
+      const userId = session?.user.id;
+      const userData = await getUserById(userId || '');
+      setUser(userData);
+      const suggestionData = await getTopThreeSuggestionsByUserId(parseInt(userId || ''));
+      setSuggestions(suggestionData || []);
+    };
+    fetchUser();
+  }, []);
+
   const userProfile = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    memberSince: 'January 1, 2020',
-    bio: 'Food enthusiast and home chef. Love to experiment with new recipes and share them with friends and family.',
-    avatarUrl: 'https://via.placeholder.com/150',
-    suggestions: [
-      {
-        id: '1',
-        dish: 'Paneer Butter Masala',
-        votes: 45,
-        status: 'pending',
-        date: 'Dec 24, 2024',
-      },
-      {
-        id: '2',
-        dish: 'Mixed Fruit Salad',
-        votes: 32,
-        status: 'approved',
-        date: 'Dec 23, 2024',
-      },
-    ],
+    name: user?.name,
+    email: user?.email,
+    rollNumber: user?.rollNumber,
+    suggestions: suggestions
   };
 
   const getStatusColor = (status: string) => {
@@ -54,14 +67,6 @@ const ProfilePage = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                <Image
-                  src={userProfile.avatarUrl}
-                  alt="Profile Avatar"
-                  layout="fill"
-                  objectFit="cover"
-                />
-              </div>
               <span>{userProfile.name}</span>
             </CardTitle>
           </CardHeader>
@@ -72,12 +77,8 @@ const ProfilePage = () => {
                 <p className="text-gray-600">{userProfile.email}</p>
               </div>
               <div>
-                <h2 className="text-lg font-medium">Member Since</h2>
-                <p className="text-gray-600">{userProfile.memberSince}</p>
-              </div>
-              <div>
-                <h2 className="text-lg font-medium">Bio</h2>
-                <p className="text-gray-600">{userProfile.bio}</p>
+                <h2 className="text-lg font-medium">Roll Number</h2>
+                <p className="text-gray-600">{userProfile.rollNumber}</p>
               </div>
             </div>
           </CardContent>
@@ -86,32 +87,31 @@ const ProfilePage = () => {
         {/* Suggestions List */}
         <div className="space-y-4">
           <h2 className="text-lg font-medium">Your Suggestions</h2>
-          {userProfile.suggestions.map((suggestion) => (
-            <Card key={suggestion.id}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-lg">{suggestion.dish}</h3>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${getStatusColor(
-                          suggestion.status
-                        )}`}
-                      >
-                        {suggestion.status.charAt(0).toUpperCase() +
-                          suggestion.status.slice(1)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span>{suggestion.date}</span>
-                      <span>•</span>
-                      <span>{suggestion.votes} votes</span>
+          {userProfile.suggestions.length > 0 ? (
+            userProfile.suggestions.map((suggestion) => (
+              <Card key={suggestion.id}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-lg">{suggestion.name}</h3>
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${getStatusColor(
+                            suggestion.status
+                          )}`}
+                        >
+                          {suggestion.status}
+                        </span>
+                      </div>
+                      <p className="text-gray-600">{suggestion.description}</p>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <p className="text-gray-600 flex justify-center">No suggestions</p>
+          )}
         </div>
       </div>
     </Layout>

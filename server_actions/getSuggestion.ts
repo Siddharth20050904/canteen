@@ -28,3 +28,35 @@ export async function getAllSuggestions() {
     return null;
   }
 }
+
+export interface Suggestion {
+  id: number;
+  mealType: string;
+  name: string;
+  description: string;
+  likes: number;
+  dislikes: number;
+  createdAt: Date;
+  updatedAt: Date;
+  username: string;
+  userId: string;
+  status: string;
+}
+
+export async function getTopThreeSuggestionsByUserId(userId: number): Promise<Suggestion[] | null> {
+  try {
+    const suggestions: Suggestion[] = await prisma.suggestion.findMany({
+      where: {
+        userId: userId.toString()
+      },
+      orderBy: {
+        likes: 'desc'
+      },
+      take: 3
+    });
+    return suggestions;
+  } catch (error) {
+    console.error("Error fetching top suggestions:", error);
+    return null;
+  }
+}
