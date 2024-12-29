@@ -66,7 +66,7 @@ export const currentDayMenuData = async () => {
               todayMeals.push({
                   meal: item.mealType.charAt(0).toUpperCase() + item.mealType.slice(1),
                   items: `${item.mainCourse ? item.mainCourse : ''}${item.sideDish ? ', ' + item.sideDish : ''}${item.dessert ? ', ' + item.dessert : ''}${item.beverage ? ', ' + item.beverage : ''}`,
-                  time: item.mealType === 'breakfast' ? '8:00 AM' : item.mealType === 'lunch' ? '12:00 PM' : item.mealType === 'snacks' ? '4:00 PM' : '8:00 PM'              });
+                  time: item.mealType === 'breakfast' ? '8:00 AM' : item.mealType === 'lunch' ? '12:00 PM' : item.mealType === 'snacks' ? '17:00 PM' : '20:00 PM'              });
           }
       });
       return todayMeals;

@@ -28,12 +28,13 @@ const AttendancePage = () => {
 
   const getMealStatus = (mealTime: string): 'upcoming' | 'marked' | 'missed' => {
     const now = new Date();
-    const [hours, minutes] = mealTime.split(':').map(Number);
+    const [hours] = mealTime.split(':').map(Number);
+    console.log(hours);
     const mealDateTime = new Date();
-    mealDateTime.setHours(hours, minutes);
+    mealDateTime.setHours(hours);
 
     // Add 1 hour buffer after meal time
-    const bufferTime = new Date(mealDateTime.getTime() + 60 * 60 * 1000);
+    const bufferTime = new Date(mealDateTime.getTime() + 60 * 60 * 2000);
 
     if (now > bufferTime) {
       return 'missed';
