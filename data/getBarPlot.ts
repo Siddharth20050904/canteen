@@ -1,5 +1,5 @@
-"use server";
-import { fetchReviews } from '../server_actions/reviewFetch';
+"use client";
+import { getReviewData } from "../data/reviewChartData";
 
 interface Review {
   mealType: string;
@@ -59,7 +59,7 @@ export const getBarPlotData = async (): Promise<DayReviewStats[]> => {
   const barPlotData: DayReviewStats[] = daysOfWeek.map(initializeDayReviewStats);
 
   try {
-    const reviews: Review[] = await fetchReviews();
+    const reviews: Review[] = await getReviewData();
 
     reviews.forEach((review) => {
       const dayIndex = review.day.toLowerCase() === 'sunday' ? 0 : review.day.toLowerCase() === 'monday' ? 1 : review.day.toLowerCase() === 'tuesday' ? 2 : review.day.toLowerCase() === 'wednesday' ? 3 : review.day.toLowerCase() === 'thursday' ? 4 : review.day.toLowerCase() === 'friday' ? 5 : 6;

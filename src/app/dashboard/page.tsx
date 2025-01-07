@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, ChefHat, MessageSquare, TrendingUp, Edit3} from "lucide-react";
+import { Calendar, ChefHat, MessageSquare, TrendingUp, Edit3 } from "lucide-react";
 import { Layout } from '@/components/layout/Layout';
 import { currentDayMenuData } from '../../../data/menuData';
 import { getAttendanceStatsByUserId } from '../../../data/userAttendaneStats';
@@ -18,6 +18,9 @@ const DashboardPage = () => {
   const [attendanceStats, setAttendanceStats] = React.useState<{ present: number; total: number }>({ present: 0, total: 0 });
   const [totalReviews, setTotalReviews] = React.useState<number>(0);
   const [recentActivity, setRecentActivity] = React.useState<{ activity: string; type: string; timestamp: string }[]>([]);
+  const [loadingMenu, setLoadingMenu] = React.useState(true);
+  const [loadingAttendance, setLoadingAttendance] = React.useState(true);
+  const [loadingActivity, setLoadingActivity] = React.useState(true);
 
   useEffect(() => {
     deletionJobScheduler();
@@ -30,8 +33,15 @@ const DashboardPage = () => {
     }
 
     const fetchMenu = async () => {
-      const menuData = await currentDayMenuData();
-      setTodayMenu(menuData);
+      setLoadingMenu(true);
+      try {
+        const menuData = await currentDayMenuData();
+        setTodayMenu(menuData);
+      } catch (error) {
+        console.error('Error fetching menu data:', error);
+      } finally {
+        setLoadingMenu(false);
+      }
     };
 
     fetchMenu();
@@ -39,10 +49,17 @@ const DashboardPage = () => {
 
   useEffect(() => {
     const fetchAttendanceStats = async () => {
-      if (session.status === "authenticated") {
-        const userId = session.data.user.id; // Replace with the actual user ID
-        const stats = await getAttendanceStatsByUserId(userId);
-        setAttendanceStats(stats);
+      setLoadingAttendance(true);
+      try {
+        if (session.status === "authenticated") {
+          const userId = session.data.user.id; // Replace with the actual user ID
+          const stats = await getAttendanceStatsByUserId(userId);
+          setAttendanceStats(stats);
+        }
+      } catch (error) {
+        console.error('Error fetching attendance stats:', error);
+      } finally {
+        setLoadingAttendance(false);
       }
     };
     fetchAttendanceStats();
@@ -50,29 +67,39 @@ const DashboardPage = () => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      if (session.status === "authenticated") {
-        const userId = session.data.user.id; // Replace with the actual user ID
-        const totalRev = await getTotalReviewsByUserId(userId);
-        setTotalReviews(totalRev);
+      try {
+        if (session.status === "authenticated") {
+          const userId = session.data.user.id; // Replace with the actual user ID
+          const totalRev = await getTotalReviewsByUserId(userId);
+          setTotalReviews(totalRev);
+        }
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
       }
     };
     fetchUser();
   }, [session.status, session.data]);
 
-  
-  useEffect(()=>{
+  useEffect(() => {
     const fetchRecentActivity = async () => {
+      setLoadingActivity(true);
       const timeNow = new Date();
-      if (session.status === "authenticated") {
-        const userId = session.data.user.id; // Replace with the actual user ID
-        const activity = await recentActivityByUserId(userId);
-        setRecentActivity(activity.slice(0,3).map(ele => ({
-          activity: ele.activity,
-          type: ele.type,
-          timestamp: (timeNow.getHours() - ele.timestamp.getHours()) >0? timeNow.getHours() - ele.timestamp.getHours() + " hours ago" : (timeNow.getMinutes() - ele.timestamp.getMinutes()) >0? timeNow.getMinutes() - ele.timestamp.getMinutes() + " minutes ago" : "Just now"
-        })));
+      try {
+        if (session.status === "authenticated") {
+          const userId = session.data.user.id; // Replace with the actual user ID
+          const activity = await recentActivityByUserId(userId);
+          setRecentActivity(activity.slice(0, 3).map(ele => ({
+            activity: ele.activity,
+            type: ele.type,
+            timestamp: (timeNow.getDate() - ele.timestamp.getDate() > 0 ? "1 Day ago" : (timeNow.getHours() - ele.timestamp.getHours() > 0 ? timeNow.getHours() - ele.timestamp.getHours() + " hours ago" : (timeNow.getMinutes() - ele.timestamp.getMinutes() > 0 ? timeNow.getMinutes() - ele.timestamp.getMinutes() + " minutes ago" : "Just now")))
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching recent activity:', error);
+      } finally {
+        setLoadingActivity(false);
       }
-    }
+    };
     fetchRecentActivity();
   }, [session.status, session.data]);
 
@@ -81,11 +108,10 @@ const DashboardPage = () => {
   }
 
   const stats = [
-    { title: "Attendance", value: `${(attendanceStats.present / attendanceStats.total)*100}%`, icon: Calendar },
+    { title: "Attendance", value: `${((attendanceStats.present / attendanceStats.total) * 100).toFixed(2)}%`, icon: Calendar },
     { title: "Reviews Given", value: totalReviews, icon: MessageSquare },
-    { title: "Total Meals", value: attendanceStats.present , icon: ChefHat }
+    { title: "Total Meals", value: attendanceStats.present, icon: ChefHat }
   ];
-
 
   return (
     <Layout>
@@ -110,7 +136,7 @@ const DashboardPage = () => {
                   <stat.icon className="w-4 h-4 text-gray-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">{stat.value}</div>
+                  <div className="text-2xl font-bold text-black">{loadingAttendance ? "loading...":stat.value}</div>
                 </CardContent>
               </Card>
             ))}
@@ -127,17 +153,21 @@ const DashboardPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {todayMenu.map((item) => (
-                    <div key={item.meal} className="flex justify-between items-start border-b pb-3 text-black">
-                      <div>
-                        <h3 className="font-medium">{item.meal}</h3>
-                        <p className="text-sm text-gray-600">{item.items}</p>
+                {loadingMenu ? (
+                  <div>Loading...</div> // Replace this with your loading skeleton component
+                ) : (
+                  <div className="space-y-4">
+                    {todayMenu.map((item) => (
+                      <div key={item.meal} className="flex justify-between items-start border-b pb-3 text-black">
+                        <div>
+                          <h3 className="font-medium">{item.meal}</h3>
+                          <p className="text-sm text-gray-600">{item.items}</p>
+                        </div>
+                        <span className="text-sm text-gray-500">{item.time}</span>
                       </div>
-                      <span className="text-sm text-gray-500">{item.time}</span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -150,29 +180,33 @@ const DashboardPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-              <div className="space-y-4 text-black">
-                  {recentActivity.length > 0 ? (
-                    recentActivity.map((activity, index) => (
-                      <div key={index} className="flex items-center gap-4 border-b pb-3">
-                        <div className={`p-2 rounded-full ${activity.type === 'feedback' ? 'bg-blue-100' : activity.type === 'suggestion' ? 'bg-yellow-100' : 'bg-green-100'}`}>
-                        {activity.type === 'feedback' ? (
-                          <MessageSquare className="w-4 h-4 text-blue-600" />
-                        ) : activity.type === 'suggestion' ? (
-                          <Edit3 className="w-4 h-4 text-yellow-600" />
-                        ) : (
-                          <Calendar className="w-4 h-4 text-green-600" />
-                        )}
-                      </div>
-                        <div>
-                          <h3 className="font-medium">{activity.activity}</h3>
-                          <p className="text-sm text-gray-600">{activity.timestamp}</p>
+                {loadingActivity ? (
+                  <div>Loading...</div> // Replace this with your loading skeleton component
+                ) : (
+                  <div className="space-y-4 text-black">
+                    {recentActivity.length > 0 ? (
+                      recentActivity.map((activity, index) => (
+                        <div key={index} className="flex items-center gap-4 border-b pb-3">
+                          <div className={`p-2 rounded-full ${activity.type === 'feedback' ? 'bg-blue-100' : activity.type === 'suggestion' ? 'bg-yellow-100' : 'bg-green-100'}`}>
+                            {activity.type === 'feedback' ? (
+                              <MessageSquare className="w-4 h-4 text-blue-600" />
+                            ) : activity.type === 'suggestion' ? (
+                              <Edit3 className="w-4 h-4 text-yellow-600" />
+                            ) : (
+                              <Calendar className="w-4 h-4 text-green-600" />
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-medium">{activity.activity}</h3>
+                            <p className="text-sm text-gray-600">{activity.timestamp}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-600">No recent activity</p>
-                  )}
-                </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-600">No recent activity</p>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

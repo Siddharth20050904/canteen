@@ -10,14 +10,15 @@ import { useState, useEffect } from 'react';
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 const FeedbackAnalysisPage = () => {
-  const { posRev, neuRev, negRev } = PieData();
-
   const [barPlotData, setBarPlotData] = useState<DayReviewStats[]>([]);
+  const [pieDataValues, setPieDataValues] = useState({ posRev: 0, neuRev: 0, negRev: 0 });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await getBarPlotData();
+        const { posRev, neuRev, negRev } = await PieData();
+        setPieDataValues({ posRev, neuRev, negRev });
         setBarPlotData(data);
       } catch (error) {
         console.error('Error fetching bar plot data:', error);
@@ -34,9 +35,8 @@ const FeedbackAnalysisPage = () => {
     labels: ['Positive', 'Neutral', 'Negative'],
     datasets: [
       {
-        data: [posRev, neuRev, negRev],
         backgroundColor: ['#4CAF50', '#FFEB3B', '#F44336'],
-        hoverBackgroundColor: ['#66BB6A', '#FFF176', '#EF5350'],
+        data: [pieDataValues.posRev, pieDataValues.neuRev, pieDataValues.negRev],
       },
     ],
   };

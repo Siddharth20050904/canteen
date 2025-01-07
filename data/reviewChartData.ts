@@ -1,54 +1,45 @@
-import { useEffect, useState } from 'react';
+"use server";
 import { fetchReviews } from '../server_actions/reviewFetch';
 
-const ReviewDataFetcher = () => {
-    const [reviewData, setReviewData] = useState([]);
+export const getReviewData = async () => {
+  try {
+    const fetchedData = await fetchReviews();
+    const currentDate = new Date();
+    const startOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
+    startOfWeek.setHours(0, 0, 0, 0);
 
-    useEffect(() => {
-      const fetchReviewData = async () => {
-        try {
-          const fetchedData = await fetchReviews();
-          const currentDate = new Date();
-          const startOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
-          startOfWeek.setHours(0, 0, 0, 0);
-          
-          const currentWeekReviews = fetchedData.filter((review: { createdAt: string | number | Date; }) => {
-            const reviewDate = new Date(review.createdAt);
-            return reviewDate >= startOfWeek;
-          });
-          
-          setReviewData(currentWeekReviews as React.SetStateAction<never[]>);
-          if (!currentWeekReviews || currentWeekReviews.length === 0) {
-            throw new Error('No reviews fetched for current week');
-          }
-        } catch (error) {
-          console.error('Error fetching reviews:', error);
-        }
-      };
+    const currentWeekReviews = fetchedData.filter((review) => {
+      const reviewDate = new Date(review.createdAt);
+      return reviewDate >= startOfWeek;
+    });
 
-      fetchReviewData();
-    }, []);
+    if (!currentWeekReviews || currentWeekReviews.length === 0) {
+      throw new Error('No reviews fetched for current week');
+    }
 
-    return reviewData;
+    return currentWeekReviews;
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    return [];
+  }
 };
-export const PieData = () => {
-    const [posRev, setPosRev] = useState(0);
-    const [negRev, setNegRev] = useState(0);
-    const [neuRev, setNeuRev] = useState(0);
 
-    const reviewData = ReviewDataFetcher();
-    
-    useEffect(() => {
-        if (reviewData.length > 0) {
-            const positiveReviews = reviewData.filter((review: { rating: number }) => review.rating > 3);
-            const negativeReviews = reviewData.filter((review: { rating: number }) => review.rating < 2);
-            const neutralReviews = reviewData.filter((review: { rating: number }) => review.rating >= 2 && review.rating <= 3);
+export const PieData = async () => {
+  const reviewData = await getReviewData();
 
-            setPosRev((positiveReviews.length / reviewData.length) * 100);
-            setNegRev((negativeReviews.length / reviewData.length) * 100);
-            setNeuRev((neutralReviews.length / reviewData.length) * 100);
-        }
-    }, [reviewData]);
+  if (reviewData.length === 0) {
+    return { posRev: 0, negRev: 0, neuRev: 0 };
+  }
 
-    return { posRev, negRev, neuRev };
-}
+  const positiveReviews = reviewData.filter((review) => review.rating > 3);
+  const negativeReviews = reviewData.filter((review) => review.rating < 2);
+  const neutralReviews = reviewData.filter((review) => review.rating >= 2 && review.rating <= 3);
+
+  const totalReviews = reviewData.length;
+
+  const posRev = (positiveReviews.length / totalReviews) * 100;
+  const negRev = (negativeReviews.length / totalReviews) * 100;
+  const neuRev = (neutralReviews.length / totalReviews) * 100;
+
+  return { posRev, negRev, neuRev };
+};

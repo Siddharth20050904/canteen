@@ -1,4 +1,3 @@
-// src/app/attendance/page.tsx
 "use client";
 import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
@@ -25,6 +24,8 @@ const AttendancePage = () => {
   const userId = session?.user?.id;
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, total: 0 });
+  const [loading, setLoading] = useState(true);
+  const [loadingAttendance, setLoadingAttendance] = useState(true);
 
   const getMealStatus = (mealTime: string): 'upcoming' | 'marked' | 'missed' => {
     const now = new Date();
@@ -45,7 +46,6 @@ const AttendancePage = () => {
     return 'upcoming';
   };
 
-
   useEffect(() => {
     const fetchMenuData = async () => {
       try {
@@ -59,6 +59,8 @@ const AttendancePage = () => {
         setTodayMeals(formattedMenuData);
       } catch (error) {
         console.error('Error fetching menu data:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchMenuData();
@@ -67,6 +69,7 @@ const AttendancePage = () => {
   useEffect(() => {
     const getAttendanceStatus = async (userId: string) => {
       try {
+        setLoadingAttendance(true);
         const attend = await getTodayAttendance(userId);
         setAttendance(attend.map(a => ({
           id: a.id,
@@ -84,6 +87,8 @@ const AttendancePage = () => {
         );
       } catch (error) {
         console.error('Error fetching attendance:', error);
+      }finally {
+        setLoadingAttendance(false);
       }
     };    
     if (userId) {
@@ -131,26 +136,29 @@ const AttendancePage = () => {
   };
 
   const handleMarkAttendance = async (mealId: string, status: 'present' | 'absent') => {
+    const userId = session?.user?.id;
+    if (!userId) {
+      console.error('User ID is undefined');
+      return;
+    }
+
+    // Optimistically update the local state
+    const previousMeals = [...todayMeals];
+    setTodayMeals(prevMeals => 
+      prevMeals.map(meal => 
+        meal.id === mealId 
+          ? { ...meal, status: status === 'present' ? 'marked' : 'missed' }
+          : meal
+      )
+    );
+
     try {
-      const userId = session?.user?.id;
-      if (!userId) {
-        throw new Error('User ID is undefined');
-      }
       await markAttendance(userId, mealId, status);
-
       await logActivity(userId, `Marked attendance for ${mealId} as ${status}`, 'attendance');
-
-      // Update local state to reflect the change
-      setTodayMeals(prevMeals => 
-        prevMeals.map(meal => 
-          meal.id === mealId 
-            ? { ...meal, status: status === 'present' ? 'marked' : 'missed' }
-            : meal
-        )
-      );
     } catch (error) {
       console.error('Failed to mark attendance:', error);
-      // Add error handling UI feedback here
+      // Revert the state if there's an error
+      setTodayMeals(previousMeals);
     }
   };
 
@@ -174,75 +182,79 @@ const AttendancePage = () => {
                 <stat.icon className="w-4 h-4 text-gray-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                {loadingAttendance ? "loading...":(<div className="text-2xl font-bold">{stat.value}</div>)}
               </CardContent>
             </Card>
           ))}
         </div>
 
         {/* Today's Meals */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Today&apos;s Meals</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {todayMeals.map((meal) => (
-                <div 
-                  key={meal.id} 
-                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 space-y-4 sm:space-y-0"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Clock className="w-5 h-5 text-blue-600" />
+        {loading ? (
+          <div>Loading...</div> // Replace this with your loading skeleton component
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Today&apos;s Meals</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {todayMeals.map((meal) => (
+                  <div 
+                    key={meal.id} 
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 space-y-4 sm:space-y-0"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Clock className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">{meal.name}</h3>
+                        <p className="text-sm text-gray-600">{meal.time}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-medium">{meal.name}</h3>
-                      <p className="text-sm text-gray-600">{meal.time}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                    <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(meal, attendance)} sm:text-xs sm:px-2`}>
-                      {meal.status.charAt(0).toUpperCase() + meal.status.slice(1)}
-                    </span>
-                      {meal.status === 'upcoming' && (
-                        <div className="flex items-center gap-2">
-                          {attendance.find(a => a.mealId === meal.id && a.status === 'present') ? (
-                            <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                              Present
-                            </span>
-                          ) : attendance.find(a => a.mealId === meal.id && a.status === 'absent') ? (
-                            <span className="px-3 py-1 rounded-full text-sm bg-red-100 text-red-800">
-                              Absent
-                            </span>
-                          ) : (
-                            <>
-                              <button 
-                                onClick={() => handleMarkAttendance(meal.id, 'absent')}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm sm:px-2"
-                              >
-                                Mark Absent
-                              </button>
-                              <button
-                                onClick={() => handleMarkAttendance(meal.id, 'present')}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:px-2"
-                              >
-                                Mark Attendance
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      )}
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                      <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(meal, attendance)} sm:text-xs sm:px-2`}>
+                        {meal.status.charAt(0).toUpperCase() + meal.status.slice(1)}
+                      </span>
+                        {meal.status === 'upcoming' && (
+                          <div className="flex items-center gap-2">
+                            {attendance.find(a => a.mealId === meal.id && a.status === 'present') ? (
+                              <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                                Present
+                              </span>
+                            ) : attendance.find(a => a.mealId === meal.id && a.status === 'absent') ? (
+                              <span className="px-3 py-1 rounded-full text-sm bg-red-100 text-red-800">
+                                Absent
+                              </span>
+                            ) : (
+                              <>
+                                <button 
+                                  onClick={() => handleMarkAttendance(meal.id, 'absent')}
+                                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm sm:px-2"
+                                >
+                                  Mark Absent
+                                </button>
+                                <button
+                                  onClick={() => handleMarkAttendance(meal.id, 'present')}
+                                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:px-2"
+                                >
+                                  Mark Attendance
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
 
-                    {meal.status === 'missed' && (
-                      <span className="text-sm text-red-600">Time elapsed</span>
-                    )}
+                      {meal.status === 'missed' && (
+                        <span className="text-sm text-red-600">Time elapsed</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </Layout>
   );

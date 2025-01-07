@@ -11,6 +11,7 @@ import { logActivity } from '../../../server_actions/logActivity';
 const FeedbackPage = () => {
   const { data: session } = useSession();
   const [rating, setRating] = React.useState(0);
+  const [submitting, setSubmitting] = React.useState(false);
   
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -28,14 +29,21 @@ const FeedbackPage = () => {
       userId: session.user.id,
       day: formData.get('day') as string,
     };
-
-    const response = await addReview(review);
-    if (response.success) {
-      await logActivity(session.user.id, 'Submitted a feedback', 'feedback');
-      window.location.reload(); 
-    }else{
-      alert('Failed to submit feedback');
+    try{
+      setSubmitting(true);
+      const response = await addReview(review);
+      if (response.success) {
+        await logActivity(session.user.id, 'Submitted a feedback', 'feedback');
+        window.location.reload(); 
+      }else{
+        alert('Failed to submit feedback');
+      }
+    }catch(error){
+      console.error(error);
+    }finally{
+      setSubmitting(false)
     }
+    
   };
 
   return (
@@ -133,7 +141,8 @@ const FeedbackPage = () => {
 
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+                className={`w-full bg-blue-600 text-white py-2 px-4 rounded-lg ${submitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
+                disabled={submitting}
               >
                 Submit Feedback
               </button>
