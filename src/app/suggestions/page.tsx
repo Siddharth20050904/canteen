@@ -328,13 +328,6 @@ const SuggestionsPage = () => {
             </Card>
           ))}
         </div>
-
-        {/* Load More Button */}
-        <div className="flex justify-center">
-          <button className="px-6 py-2 border rounded-lg hover:bg-gray-50">
-            Load More Suggestions
-          </button>
-        </div>
       </div>
     </Layout>
   );

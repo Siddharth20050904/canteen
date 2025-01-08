@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Clock, Calendar, Check, Percent } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardContentSkeleton } from '@/components/ui/card';
 import { currentDayMenuData } from '../../../data/menuData';
 import { markAttendance } from '../../../server_actions/attendance';
 import { useSession } from 'next-auth/react';
@@ -181,21 +181,23 @@ const AttendancePage = () => {
                 </CardTitle>
                 <stat.icon className="w-4 h-4 text-gray-600" />
               </CardHeader>
-              <CardContent>
-                {loadingAttendance ? "loading...":(<div className="text-2xl font-bold">{stat.value}</div>)}
-              </CardContent>
+              {loadingAttendance ? (<CardContentSkeleton/>):(<CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+              </CardContent>)}
+              
             </Card>
           ))}
         </div>
 
         {/* Today's Meals */}
-        {loading ? (
-          <div>Loading...</div> // Replace this with your loading skeleton component
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Today&apos;s Meals</CardTitle>
-            </CardHeader>
+      
+        <Card>
+          <CardHeader>
+            <CardTitle>Today&apos;s Meals</CardTitle>
+          </CardHeader>
+          {loading ? (
+            <CardContentSkeleton />
+          ) : (
             <CardContent>
               <div className="space-y-4">
                 {todayMeals.map((meal) => (
@@ -253,8 +255,8 @@ const AttendancePage = () => {
                 ))}
               </div>
             </CardContent>
-          </Card>
-        )}
+          )}
+        </Card>
       </div>
     </Layout>
   );

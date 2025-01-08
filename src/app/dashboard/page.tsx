@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardContentSkeleton } from "@/components/ui/card";
 import { Calendar, ChefHat, MessageSquare, TrendingUp, Edit3 } from "lucide-react";
 import { Layout } from '@/components/layout/Layout';
 import { currentDayMenuData } from '../../../data/menuData';
@@ -135,9 +135,10 @@ const DashboardPage = () => {
                   </CardTitle>
                   <stat.icon className="w-4 h-4 text-gray-600" />
                 </CardHeader>
+                {loadingAttendance? (<CardContentSkeleton></CardContentSkeleton> ):(
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">{loadingAttendance ? "loading...":stat.value}</div>
-                </CardContent>
+                  <div className="text-2xl font-bold text-black">{stat.value}</div>
+                </CardContent>)}
               </Card>
             ))}
           </div>
@@ -154,7 +155,7 @@ const DashboardPage = () => {
               </CardHeader>
               <CardContent>
                 {loadingMenu ? (
-                  <div>Loading...</div> // Replace this with your loading skeleton component
+                  <CardContentSkeleton></CardContentSkeleton> // Replace this with your loading skeleton component
                 ) : (
                   <div className="space-y-4">
                     {todayMenu.map((item) => (
@@ -181,7 +182,7 @@ const DashboardPage = () => {
               </CardHeader>
               <CardContent>
                 {loadingActivity ? (
-                  <div>Loading...</div> // Replace this with your loading skeleton component
+                  <CardContentSkeleton/> // Replace this with your loading skeleton component
                 ) : (
                   <div className="space-y-4 text-black">
                     {recentActivity.length > 0 ? (
