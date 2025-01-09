@@ -7,8 +7,12 @@ import { signIn } from 'next-auth/react';
 import { getUserById } from '../../../../server_actions/userFetch';
 import { useRouter } from 'next/navigation';
 
-const VerifyPage = ({ params }: { params: { id: string } }) => {
-  const id = params.id;
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+const VerifyPage = ({ params }: PageProps) => {
+  const { id } = React.use(params);
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
