@@ -37,6 +37,9 @@ model User {
   recentActivities recent_activity[]
   preferences   String?  @default("vegeterian") // vegeterian, non-vegetarian, vegan, etc.
   rollNumber    String?
+  otp String?
+  otpGeneratedAt DateTime?
+  otpVerified Boolean @default(false)
 }
 
 model Review {

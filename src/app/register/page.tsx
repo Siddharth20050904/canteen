@@ -1,6 +1,6 @@
 // src/app/register/page.tsx
 "use client";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
@@ -40,19 +40,8 @@ const RegisterPage = () => {
   
       if (res.success) {
         setSuccessMessage(res.message);
-        // Sign in the user immediately after registration
-        const signInResult = await signIn('credentials', {
-          email,
-          password,
-          redirect: false,
-        });
-  
-        if (signInResult?.ok) {
-          router.push('/dashboard');
-        } else {
-          setError('Registration successful but login failed. Please try logging in.');
-          router.push('/login');
-        }
+        localStorage.setItem('temp_pass', password);
+        router.push(`/verification/${res.id}`);
       } else {
         setError(res.message || 'Registration failed');
       }
