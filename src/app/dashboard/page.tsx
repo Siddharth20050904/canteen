@@ -3,13 +3,14 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle, CardContentSkeleton } from "@/components/ui/card";
-import { Calendar, ChefHat, MessageSquare, TrendingUp, Edit3 } from "lucide-react";
+import { Calendar, ChefHat, MessageSquare, TrendingUp, Edit3 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { currentDayMenuData } from '../../../data/menuData';
 import { getAttendanceStatsByUserId } from '../../../data/userAttendaneStats';
 import { getTotalReviewsByUserId } from '../../../server_actions/fetchRevByUserId';
 import { recentActivityByUserId } from '../../../server_actions/logActivity';
 import { deletionJobScheduler } from '../../../server_actions/cron-job';
+import Image from 'next/image';
 
 const DashboardPage = () => {
   const router = useRouter();
@@ -115,101 +116,127 @@ const DashboardPage = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-white shadow-sm">
-          <div className="flex items-center justify-between px-6 py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Mess Dashboard</h1>
-          </div>
-        </header>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-50">
 
         {/* Main Content */}
-        <main className="p-6">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-3 lg:grid-cols-3 mb-6">
-            {stats.map((stat) => (
-              <Card key={stat.title} className='min-h-[100px]'>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
-                    {stat.title}
-                  </CardTitle>
-                  <stat.icon className="w-4 h-4 text-gray-600" />
-                </CardHeader>
-                {loadingAttendance? (<CardContentSkeleton></CardContentSkeleton> ):(
-                <CardContent>
-                  <div className="text-2xl font-bold text-black">{stat.value}</div>
-                </CardContent>)}
-              </Card>
-            ))}
-          </div>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+            {/* Left Column - Hero Image */}
+            <div className="lg:w-1/2 flex items-start justify-start">
+              <div className="relative w-full max-w-[300px] md:max-w-[400px] lg:max-w-[500px] mx-auto">
+                <div className="pb-[100%]">
+                  <div className="absolute inset-0 rounded-2xl overflow-hidden">
+                    <Image 
+                      src="/vectors/canteen.png"
+                      alt="Canteen Vector"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {/* Today's Menu */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-black">
-                  <ChefHat className="w-5 h-5 text-black" />
-                  Today&apos;s Menu
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loadingMenu ? (
-                  <CardContentSkeleton></CardContentSkeleton> // Replace this with your loading skeleton component
-                ) : (
-                  <div className="space-y-4">
-                    {todayMenu.map((item) => (
-                      <div key={item.meal} className="flex justify-between items-start border-b pb-3 text-black">
-                        <div>
-                          <h3 className="font-medium">{item.meal}</h3>
-                          <p className="text-sm text-gray-600">{item.items}</p>
-                        </div>
-                        <span className="text-sm text-gray-500">{item.time}</span>
+            {/* Right Column - Stats and Cards */}
+            <div className="lg:w-1/2 space-y-8">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {stats.map((stat) => (
+                  <Card key={stat.title} className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-sm font-medium text-gray-600">
+                        {stat.title}
+                      </CardTitle>
+                      <div className="p-2 rounded-full bg-green-100">
+                        <stat.icon className="w-5 h-5 text-green-600" />
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-black">
-                  <TrendingUp className="w-5 h-5 text-black" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loadingActivity ? (
-                  <CardContentSkeleton/> // Replace this with your loading skeleton component
-                ) : (
-                  <div className="space-y-4 text-black">
-                    {recentActivity.length > 0 ? (
-                      recentActivity.map((activity, index) => (
-                        <div key={index} className="flex items-center gap-4 border-b pb-3">
-                          <div className={`p-2 rounded-full ${activity.type === 'feedback' ? 'bg-blue-100' : activity.type === 'suggestion' ? 'bg-yellow-100' : 'bg-green-100'}`}>
-                            {activity.type === 'feedback' ? (
-                              <MessageSquare className="w-4 h-4 text-blue-600" />
-                            ) : activity.type === 'suggestion' ? (
-                              <Edit3 className="w-4 h-4 text-yellow-600" />
-                            ) : (
-                              <Calendar className="w-4 h-4 text-green-600" />
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-medium">{activity.activity}</h3>
-                            <p className="text-sm text-gray-600">{activity.timestamp}</p>
-                          </div>
-                        </div>
-                      ))
+                    </CardHeader>
+                    {loadingAttendance ? (
+                      <CardContentSkeleton />
                     ) : (
-                      <p className="text-sm text-gray-600">No recent activity</p>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                      </CardContent>
                     )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Menu and Activity Cards */}
+              <div className="grid grid-cols-1 gap-6">
+                {/* Today's Menu */}
+                <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="border-b border-gray-100">
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="p-2 rounded-full bg-green-100">
+                        <ChefHat className="w-5 h-5 text-green-600" />
+                      </div>
+                      <span className="text-gray-900">Today&apos;s Menu</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    {loadingMenu ? (
+                      <CardContentSkeleton />
+                    ) : (
+                      <div className="space-y-4">
+                        {todayMenu.map((item) => (
+                          <div key={item.meal} className="flex justify-between items-start pb-4 last:pb-0 last:border-0 border-b border-gray-100">
+                            <div>
+                              <h3 className="font-semibold text-gray-900">{item.meal}</h3>
+                              <p className="text-sm text-gray-600 mt-1">{item.items}</p>
+                            </div>
+                            <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                              {item.time}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Recent Activity */}
+                <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="border-b border-gray-100">
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="p-2 rounded-full bg-green-100">
+                        <TrendingUp className="w-5 h-5 text-green-600" />
+                      </div>
+                      <span className="text-gray-900">Recent Activity</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    {loadingActivity ? (
+                      <CardContentSkeleton />
+                    ) : (
+                      <div className="space-y-4">
+                        {recentActivity.length > 0 ? (
+                          recentActivity.map((activity, index) => (
+                            <div key={index} className="flex items-center gap-4 pb-4 last:pb-0 last:border-0 border-b border-gray-100">
+                              <div className="p-2 rounded-full bg-green-100">
+                                {activity.type === 'feedback' ? (
+                                  <MessageSquare className="w-5 h-5 text-green-600" />
+                                ) : activity.type === 'suggestion' ? (
+                                  <Edit3 className="w-5 h-5 text-green-600" />
+                                ) : (
+                                  <Calendar className="w-5 h-5 text-green-600" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="font-medium text-gray-900">{activity.activity}</h3>
+                                <p className="text-sm text-green-600">{activity.timestamp}</p>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-gray-600">No recent activity</p>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </main>
       </div>
@@ -218,3 +245,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+

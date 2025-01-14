@@ -1,13 +1,13 @@
-// src/app/register/page.tsx
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { registerUser } from '../../../server_actions/registerActions'; // Import the register action
-import { useRouter } from 'next/navigation'; // To redirect on success
+import { registerUser } from '../../../server_actions/registerActions';
+import { useRouter } from 'next/navigation';
 import Link from "next/link";
+import Image from "next/image";
 
 const RegisterPage = () => {
   const { data: session } = useSession();
@@ -26,7 +26,6 @@ const RegisterPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
@@ -50,94 +49,112 @@ const RegisterPage = () => {
       console.error('Registration error:', err);
     }
   };
-  
 
   return (
     <Layout noLayout={true}>
-      <div className="flex justify-center items-center h-screen">
-        <Card className="max-w-md w-full bg-gray-300">
-          <CardHeader>
-            <CardTitle className="text-center text-2xl font-bold rounded-lg">Register</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {error && <p className="text-red-500">{error}</p>}
-            {successMessage && <p className="text-green-500">{successMessage}</p>}
-            <form onSubmit={handleSubmit} className="space-y-4 bg-gray-200 rounded-lg p-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Full Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your full name"
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your email"
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Create a password"
-                />
-              </div>
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                  Confirm Password
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Confirm your password"
-                />
-              </div>
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{' '}
-                  <Link href="/login" className="text-blue-600 hover:underline">
-                    Sign in
-                  </Link>
-                </p>
-              </div>
-              <div className="flex justify-between items-center">
+      <div className="flex min-h-screen flex-col md:flex-row">
+        <div className="w-full md:w-1/2 bg-green-400 flex items-center justify-center md:shadow-[0_0px_60px_0px_rgba(0,0,0,0.3)] z-10">
+          <div className="text-center p-16">
+            <Image
+              src="/vectors/register.png"
+              alt="Registration illustration"
+              className="mx-auto mb-8 rounded-lg w-full h-full"
+              width={300}
+              height={300}
+              priority
+              quality={100}
+            />
+            <h2 className="text-3xl font-bold text-white mb-4">Join Our Platform</h2>
+            <p className="text-blue-100 text-lg max-w-md mx-auto">
+              Create your account and start managing your experience with our powerful dashboard
+            </p>
+          </div>
+        </div>
+
+        <div className="w-full md:w-1/2 flex items-center justify-center bg-white mt-5 mb-5">
+          <Card className="w-full max-w-md mx-8 bg-white shadow-lg bg-gradient-to-br from-gray-200 to-gray-150">
+            <CardHeader>
+              <CardTitle className="text-center text-2xl font-bold">Create Account</CardTitle>
+              <p className="text-center text-gray-600 mt-2">Please fill in your details to register</p>
+            </CardHeader>
+            <CardContent>
+              {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+              {successMessage && <p className="text-green-500 mb-4 text-center">{successMessage}</p>}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                    Full Name
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    Email Address
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Create a password"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                    Confirm Password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    className="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Confirm your password"
+                  />
+                </div>
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
                 >
-                  Register
+                  Create Account
                 </button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                <div className="text-center">
+                  <span className="text-sm text-gray-600">
+                    Already have an account?{' '}
+                    <Link href="/login" className="text-blue-600 hover:underline font-medium">
+                      Sign in
+                    </Link>
+                  </span>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </Layout>
   );

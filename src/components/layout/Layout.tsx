@@ -30,7 +30,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, noLayout }) => {
   const menuButton = (
     <button
       onClick={() => setIsMobileOpen(!isMobileOpen)}
-      className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+      className="p-2 rounded-lg hover:bg-gray-100"
     >
       <Menu className="w-6 h-6" />
     </button>
@@ -48,7 +48,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, noLayout }) => {
     <div className="min-h-screen bg-gray-50 text-black">
       <Header menuButton={menuButton} />
       <Sidebar isMobileOpen={isMobileOpen} setIsMobileOpenAction={setIsMobileOpen} />
-      <main className="lg:ml-64 pt-16 min-h-[calc(100vh-4rem)]">
+      <main className="pt-16 min-h-[calc(100vh-4rem)]">
         <div className="p-6">
           {children}
         </div>

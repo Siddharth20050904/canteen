@@ -9,6 +9,7 @@ export async function verifyOTP(id: string, otp: string) {
     const user = await prisma.user.findUnique({ where: { id } });
 
     if (!user || user.otp !== otp) {
+      console.log("Invalid OTP")
       return { success: false, message: 'Invalid OTP' };
     }
 

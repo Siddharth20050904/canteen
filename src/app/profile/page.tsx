@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import React from 'react';
 import { Layout } from '@/components/layout/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardContentSkeleton, CardTitleSkeleton } from '@/components/ui/card';
 import { getUserById } from '../../../server_actions/userFetch';
 import { getTopThreeSuggestionsByUserId, Suggestion} from '../../../server_actions/getSuggestion';
 import { getSession } from 'next-auth/react';
@@ -24,14 +24,19 @@ const ProfilePage = () => {
 
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
+  const [loadingEmail, setLoadingEmail] = useState(true);
+  const [loadingSuggestion, setLoadingSuggestion] = useState(true);
+
   useEffect(() => {
     const fetchUser = async () => {
       const session = await getSession();
       const userId = session?.user.id;
       const userData = await getUserById(userId || '');
       setUser(userData);
+      setLoadingEmail(false);
       const suggestionData = await getTopThreeSuggestionsByUserId(userId || '');
       setSuggestions(suggestionData || []);
+      setLoadingSuggestion(false);
     };
     fetchUser();
   }, []);
@@ -66,56 +71,59 @@ const ProfilePage = () => {
         {/* Profile Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          {loadingEmail ? <CardTitleSkeleton/> : <CardTitle className="flex items-center gap-2">
               <span>{userProfile.name}</span>
-            </CardTitle>
+            </CardTitle>}
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-medium">Email</h2>
-                <p className="text-gray-600">{userProfile.email}</p>
+          {loadingSuggestion ? <CardContentSkeleton/> :
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-lg font-medium">Email</h2>
+                  <p className="text-gray-600">{userProfile.email}</p>
+                </div>
+                <div>
+                  <h2 className="text-lg font-medium">Roll Number</h2>
+                  <p className="text-gray-600">{userProfile.rollNumber}</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-medium">Roll Number</h2>
-                <p className="text-gray-600">{userProfile.rollNumber}</p>
-              </div>
-            </div>
-          </CardContent>
+            </CardContent>
+          }
         </Card>
 
         {/* Suggestions List */}
         <div className="space-y-4">
           <h2 className="text-lg font-medium">Your Suggestions</h2>
-          {userProfile.suggestions.length > 0 ? (
-            userProfile.suggestions.map((suggestion) => (
-              <Card key={suggestion.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-lg">{suggestion.name}</h3>
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${getStatusColor(
-                            suggestion.status
-                          )}`}
-                        >
-                          {suggestion.status}
-                        </span>
+          {loadingSuggestion ? <Card><CardContentSkeleton/></Card> : 
+            (userProfile.suggestions.length > 0 ? (
+              userProfile.suggestions.map((suggestion) => (
+                <Card key={suggestion.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-lg">{suggestion.name}</h3>
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${getStatusColor(
+                              suggestion.status
+                            )}`}
+                          >
+                            {suggestion.status}
+                          </span>
+                        </div>
+                        <p className="text-gray-600">{suggestion.description}</p>
                       </div>
-                      <p className="text-gray-600">{suggestion.description}</p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <p className="text-gray-600 flex justify-center">No suggestions</p>
             ))
-          ) : (
-            <p className="text-gray-600 flex justify-center">No suggestions</p>
-          )}
+          }
         </div>
       </div>
     </Layout>
   );
 };
-
 export default ProfilePage;
