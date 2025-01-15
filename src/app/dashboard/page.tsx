@@ -224,15 +224,15 @@ const DashboardPage = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-50">
+      <div className="space-y-6 min-h-screen bg-gradient-to-br from-green-50 to-gray-50">
         {/* Page Header */}
-        <div className='text-center mb-8 grid grid-cols-1 lg:grid-cols-2'>
+        <div className='text-center mb-8 grid grid-cols-1 lg:grid-cols-2 pt-5'>
           <div></div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <div></div>
           <p className="text-gray-600">Track your activity and today&apos;s meal</p>
         </div>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-9xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Left Column - Hero Image */}
             <div className="lg:w-1/2 flex items-start justify-start">

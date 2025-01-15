@@ -120,7 +120,7 @@ const ReviewSuggestionsPage = () => {
           onClick={() => handlePageChange(i)}
           className={`px-3 py-1 rounded-md ${
             currentPage === i
-              ? 'bg-blue-500 text-white'
+              ? 'bg-green-500 text-white'
               : 'hover:bg-gray-100'
           }`}
         >
@@ -158,7 +158,7 @@ const ReviewSuggestionsPage = () => {
     );
 
     return (
-      <div className="flex items-center justify-center gap-2 mt-6">
+      <div className="flex items-center justify-center gap-2 mt-8">
         {pages}
       </div>
     );
@@ -317,87 +317,90 @@ const ReviewSuggestionsPage = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-50">
+        <div className="text-center py-8">
           <h1 className="text-2xl font-bold">Review Suggestions</h1>
           <p className="text-gray-600">Review and manage all submitted suggestions</p>
         </div>
-        <div className="space-y-4">
-          {loading ? (
-            <div className="flex justify-center py-4">
-              <div className="animate-pulse text-gray-500">Loading suggestions...</div>
-            </div>
-          ) : (
-            <>
-              {suggestions.map((suggestion) => (
-                <Card key={`suggestion-${suggestion.id}`}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-lg">{suggestion.name}</h3>
-                          <span className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${getStatusColor(suggestion.status)}`}>
-                            {getStatusIcon(suggestion.status)}
-                            {suggestion.status.charAt(0).toUpperCase() + suggestion.status.slice(1)}
-                          </span>
-                        </div>
-                        <p className="text-gray-600">{suggestion.description}</p>
-                        {isAdmin && suggestion.status === 'pending' && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleAccept(suggestion.id)}
-                              className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
-                            >
-                              Accept
-                            </button>
-                            <button
-                              onClick={() => handleReject(suggestion.id)}
-                              className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-                            >
-                              Reject
-                            </button>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-8">
+            {loading ? (
+              <div className="flex justify-center py-4">
+                <div className="animate-pulse text-gray-500">Loading suggestions...</div>
+              </div>
+            ) : (
+              <>
+                {suggestions.map((suggestion) => (
+                  <Card key={`suggestion-${suggestion.id}`} className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 max-w-[50vw]">
+                            <h3 className="font-medium text-lg">{suggestion.name}</h3>
+                            <span className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${getStatusColor(suggestion.status)}`}>
+                              {getStatusIcon(suggestion.status)}
+                              {suggestion.status.charAt(0).toUpperCase() + suggestion.status.slice(1)}
+                            </span>
                           </div>
-                        )}
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>By: {suggestion.username}</span>
-                          <span>•</span>
-                          <span>{new Date(suggestion.createdAt).toLocaleDateString()}</span>
-                          <span>•</span>
-                          <span>{suggestion.mealType == 'mainCourse' ? 'Main Course' : suggestion.mealType == 'sideDish' ? 'Side Dish' : suggestion.mealType.charAt(0).toUpperCase() + suggestion.mealType.slice(1) }</span>
+                          <p className="text-gray-600 max-w-[50vw]">{suggestion.description}</p>
+                          {isAdmin && suggestion.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleAccept(suggestion.id)}
+                                className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                              >
+                                Accept
+                              </button>
+                              <button
+                                onClick={() => handleReject(suggestion.id)}
+                                className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-[3vw] md:gap-4 text-sm text-gray-500 max-w-[50vw]">
+                            <span>By: {suggestion.username}</span>
+                            <span>•</span>
+                            <span>{new Date(suggestion.createdAt).toLocaleDateString()}</span>
+                            <span>•</span>
+                            <span>{suggestion.mealType == 'mainCourse' ? 'Main Course' : suggestion.mealType == 'sideDish' ? 'Side Dish' : suggestion.mealType.charAt(0).toUpperCase() + suggestion.mealType.slice(1) }</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center gap-2">
+                          <button
+                            className={`flex items-center gap-1`}
+                            onClick={() => handleLike(suggestion.id)}
+                          >
+                            <ThumbsUp className={`w-4 h-4 text-green-500 ${likedSuggestions.includes(suggestion.id) ? 'fill-green-500' : ''}`} />
+                            <span>{suggestion.likes}</span>
+                          </button>
+                          <button
+                            className={`flex items-center gap-1`}
+                            onClick={() => handleDislike(suggestion.id)}
+                          >
+                            <ThumbsDown className={`w-4 h-4 text-green-500 ${dislikedSuggestions.includes(suggestion.id) ? 'fill-green-500' : ''}`} />
+                            <span>{suggestion.dislikes}</span>
+                          </button>
                         </div>
                       </div>
-                      <div className="flex flex-col items-center gap-2">
-                        <button
-                          className={`flex items-center gap-1 ${likedSuggestions.includes(suggestion.id) ? 'text-blue-500' : ''}`}
-                          onClick={() => handleLike(suggestion.id)}
-                        >
-                          <ThumbsUp className="w-4 h-4" />
-                          <span>{suggestion.likes}</span>
-                        </button>
-                        <button
-                          className={`flex items-center gap-1 ${dislikedSuggestions.includes(suggestion.id) ? 'text-red-500' : ''}`}
-                          onClick={() => handleDislike(suggestion.id)}
-                        >
-                          <ThumbsDown className="w-4 h-4" />
-                          <span>{suggestion.dislikes}</span>
-                        </button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {suggestions.length === 0 && (
-                <div className="text-center py-4 text-gray-500">
-                  No suggestions available
-                </div>
-              )}
-              {suggestions.length > 0 && renderPagination()}
-            </>
-          )}
-        </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {suggestions.length === 0 && (
+                  <div className="text-center py-4 text-gray-500">
+                    No suggestions available
+                  </div>
+                )}
+                {suggestions.length > 0 && renderPagination()}
+              </>
+            )}
+          </div>
+        </main>
       </div>
     </Layout>
   );
 };
 
 export default ReviewSuggestionsPage;
+

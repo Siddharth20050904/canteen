@@ -43,7 +43,7 @@ const FeedbackPage = () => {
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-50">
         {renderPageHeader()}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col lg:flex-row gap-8">
             {renderHeroImage()}
             <div className="lg:w-1/2 space-y-8">
