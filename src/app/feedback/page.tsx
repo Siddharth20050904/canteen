@@ -1,12 +1,13 @@
-// src/app/feedback/page.tsx
-"use client";
+'use client';
+
 import React from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Star } from 'lucide-react';
+import { Star, MessageSquare } from 'lucide-react';
 import { addReview } from '../../../server_actions/reviewAddition';
 import { useSession } from 'next-auth/react';
 import { logActivity } from '../../../server_actions/logActivity';
+import Image from 'next/image';
 
 const FeedbackPage = () => {
   const { data: session } = useSession();
@@ -15,141 +16,179 @@ const FeedbackPage = () => {
   
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!session?.user?.id) return;
+
     const formData = new FormData(event.currentTarget);
+    const review = createReviewObject(formData, rating, session.user.id);
 
-    if (!session?.user?.id) {
-      return;
-    }
+    console.log(review);
 
-    const review = {
-      meal: formData.get('meal') as string,
-      rating: rating,
-      comment: formData.get('comment') as string,
-      category: formData.get('category') as string,
-      userId: session.user.id,
-      day: formData.get('day') as string,
-    };
-    try{
+    try {
       setSubmitting(true);
       const response = await addReview(review);
       if (response.success) {
         await logActivity(session.user.id, 'Submitted a feedback', 'feedback');
-        window.location.reload(); 
-      }else{
+        window.location.reload();
+      } else {
         alert('Failed to submit feedback');
       }
-    }catch(error){
+    } catch(error) {
       console.error(error);
-    }finally{
-      setSubmitting(false)
+    } finally {
+      setSubmitting(false);
     }
-    
   };
 
   return (
     <Layout>
-      <div className="space-y-6">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-2xl font-bold">Meal Feedback</h1>
-          <p className="text-gray-600">Share your dining experience and help us improve</p>
-        </div>
-
-        {/* Submit Feedback Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Submit New Feedback</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              {/* Meal Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Meal
-                </label>
-                <select className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500" name='meal'>
-                  <option value="breakfast">Breakfast</option>
-                  <option value="lunch">Lunch</option>
-                  <option value="snack">Snack</option>
-                  <option value="dinner">Dinner</option>
-                </select>
-              </div>
-
-              {/* Rating */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rating
-                </label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      className="p-1 hover:scale-110 transition-transform"
-                      onClick={() => setRating(star)}
-                    >
-                      <Star className={`w-6 h-6 fill-current ${star <= rating ? 'text-yellow-500' : 'text-gray-300'}`} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
-                </label>
-                <select className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500" name='category'>
-                  <option value='mainCourse'>Main Course</option>
-                  <option value='sideDish'>Side Dish</option>
-                  <option value='dessert'>Dessert</option>
-                  <option value='beverage'>Beverage</option>
-                </select>
-              </div>
-
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Day of the Week
-                  </label>
-                  <select
-                    name="day"
-                    defaultValue={'Monday'}
-                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option>Monday</option>
-                    <option>Tuesday</option>
-                    <option>Wednesday</option>
-                    <option>Thursday</option>
-                    <option>Friday</option>
-                    <option>Saturday</option>
-                    <option>Sunday</option>
-                  </select>
-                </div>
-
-              {/* Comment */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Your Comments
-                </label>
-                <textarea 
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-                  placeholder="Share your experience..."
-                  name='comment'
-                />
-              </div>
-
-              <button
-                type="submit"
-                className={`w-full bg-blue-600 text-white py-2 px-4 rounded-lg ${submitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
-                disabled={submitting}
-              >
-                Submit Feedback
-              </button>
-            </form>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-50">
+        {renderPageHeader()}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {renderHeroImage()}
+            <div className="lg:w-1/2 space-y-8">
+              {renderFeedbackForm(handleSubmit, rating, setRating, submitting)}
+            </div>
+          </div>
+        </main>
       </div>
     </Layout>
   );
-};export default FeedbackPage;
+};
+
+const createReviewObject = (formData: FormData, rating: number, userId: string) => ({
+  meal: formData.get('meal') as string,
+  rating: rating,
+  comment: formData.get('comment') as string,
+  category: formData.get('category') as string,
+  userId: userId,
+  day: formData.get('day') as string,
+});
+
+const renderPageHeader = () => (
+  <div className='text-center mb-8 grid grid-cols-1 lg:grid-cols-2'>
+    <div></div>
+    <h1 className="text-2xl font-bold">Meal Feedback</h1>
+    <div></div>
+    <p className="text-gray-600">Share your dining experience and help us improve</p>
+  </div>
+);
+
+const renderHeroImage = () => (
+  <div className="lg:w-1/2 flex items-start justify-start">
+    <div className="relative w-full max-w-[300px] md:max-w-[400px] lg:max-w-[500px] mx-auto">
+      <div className="pb-[100%]">
+        <div className="absolute inset-0 rounded-2xl overflow-hidden">
+          <Image 
+            src="/vectors/feedback.png"
+            alt="Feedback Vector"
+            fill
+            className="object-cover"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const renderFeedbackForm = (
+  handleSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>,
+  rating: number,
+  setRating: React.Dispatch<React.SetStateAction<number>>,
+  submitting: boolean
+) => (
+  <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        <MessageSquare className="w-5 h-5 text-green-600" />
+        <span>Submit New Feedback</span>
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <form className="space-y-6" onSubmit={handleSubmit}>
+        {renderFormField('Select Meal','meal', renderSelectField('meal',[
+          { label: 'Breakfast', value: 'breakfast' },
+          { label: 'Lunch', value: 'lunch' },
+          { label: 'Snack', value: 'snack' },
+          { label: 'Dinner', value: 'dinner' }
+        ]))}
+        {renderFormField('Rating', '', renderRatingStars(rating, setRating))}
+        {renderFormField('Category', 'category', renderSelectField('category',[
+          { label: 'Main Course', value: 'mainCourse' },
+          { label: 'Side Dish', value: 'sideDish' },
+          { label: 'Dessert', value: 'dessert' },
+          { label: 'Beverage', value: 'beverage' }
+        ]))}
+        {renderFormField('Day of the Week', 'day', renderDaySelect())}
+        {renderFormField('Your Comments', 'comment', renderTextArea())}
+        {renderSubmitButton(submitting)}
+      </form>
+    </CardContent>
+  </Card>
+);
+
+const renderFormField = (label: string, name: string, children: React.ReactNode) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
+const renderSelectField = (name: string, options: { label: string; value: string }[]) => (
+  <select className="w-full p-2 border rounded-lg focus:ring-blue-500" name={name}>
+    {options.map(option => (
+      <option key={option.value} value={option.value}>{option.label}</option>
+    ))}
+  </select>
+);
+
+const renderRatingStars = (rating: number, setRating: React.Dispatch<React.SetStateAction<number>>) => (
+  <div className="flex gap-2">
+    {[1, 2, 3, 4, 5].map((star) => (
+      <button
+        key={star}
+        type="button"
+        className="p-1 hover:scale-110 transition-transform"
+        onClick={() => setRating(star)}
+      >
+        <Star className={`w-6 h-6 fill-current ${star <= rating ? 'text-yellow-500' : 'text-gray-300'}`} />
+      </button>
+    ))}
+  </div>
+);
+
+const renderDaySelect = () => (
+  <select
+    name="day"
+    defaultValue={'Monday'}
+    className="w-full p-2 border rounded-lg focus:ring-blue-500"
+    required
+  >
+    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+      <option key={day}>{day}</option>
+    ))}
+  </select>
+);
+
+const renderTextArea = () => (
+  <textarea 
+    className="w-full p-2 border rounded-lg focus:ring-blue-500 min-h-[100px]"
+    placeholder="Share your experience..."
+    name='comment'
+  />
+);
+
+const renderSubmitButton = (submitting: boolean) => (
+  <button
+    type="submit"
+    className={`w-full bg-green-600 text-white py-2 px-4 rounded-lg ${submitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}`}
+    disabled={submitting}
+  >
+    Submit Feedback
+  </button>
+);
+
+export default FeedbackPage;
+

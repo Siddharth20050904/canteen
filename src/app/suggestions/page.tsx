@@ -10,6 +10,7 @@ import { getTopThreeSuggestions } from '../../../server_actions/getSuggestion';
 import { Suggestion } from '@prisma/client';
 import { updateLikes, updateDislikes, getLikesByUserId, getDislikesByUserId } from '../../../server_actions/upDateLikes';
 import { logActivity } from '../../../server_actions/logActivity';
+import Image from 'next/image';
 
 const SuggestionsPage = () => {
   // Sample suggestions data - replace with actual data from your backend
@@ -200,134 +201,147 @@ const SuggestionsPage = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-50">
         {/* Page Header */}
-        <div>
+        <div className="text-center py-8 px-[5vw] grid grid-cols-1 lg:grid-cols-2">
+          <div/>
           <h1 className="text-2xl font-bold">Menu Suggestions</h1>
+          <div/>
           <p className="text-gray-600">Suggest new dishes and vote for your favorites</p>
         </div>
 
-        {/* Submit Suggestion */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ChefHat className="w-5 h-5" />
-              Submit New Suggestion
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Dish Name
-                  </label>
-                  <input 
-                    type="text"
-                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter dish name"
-                    name='dish'
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category
-                  </label>
-                  <select className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500" name='category' required>
-                    <option value={'mainCourse'}>Main Course</option>
-                    <option value={'sideDish'}>Side Dish</option>
-                    <option value={'dessert'}>Dessert</option>
-                    <option value={'beverage'}>Beverage</option>
-                  </select>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-8">
+            {/* Top Section - Hero Image and Form */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Hero Image */}
+              <div className="flex items-start justify-center">
+                <div className="relative w-full max-w-[500px]">
+                  <div className="pb-[100%]">
+                    <div className="absolute inset-0 rounded-2xl overflow-hidden">
+                      <Image 
+                        src="/vectors/suggestions.png"
+                        alt="Suggestions Vector"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              {/* Submit Suggestion Card */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea 
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-                  placeholder="Describe the dish and why it should be added..."
-                  name='description'
-                  required
-                />
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
-                >
-                  Submit Suggestion
-                </button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ChefHat className="w-5 h-5" />
+                      Submit New Suggestion
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <form className="space-y-4" onSubmit={handleSubmit}>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Dish Name
+                          </label>
+                          <input 
+                            type="text"
+                            className="w-full p-2 border rounded-lg focus:ring-blue-500"
+                            placeholder="Enter dish name"
+                            name="dish"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Category
+                          </label>
+                          <select className="w-full p-2 border rounded-lg focus:ring-blue-500" name="category" required>
+                            <option value="mainCourse">Main Course</option>
+                            <option value="sideDish">Side Dish</option>
+                            <option value="dessert">Dessert</option>
+                            <option value="beverage">Beverage</option>
+                          </select>
+                        </div>
+                      </div>
 
-        {/* Filter Section */}
-        <div className="flex gap-4 flex-wrap">
-          <select className="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-            <option>All Categories</option>
-            <option>Breakfast</option>
-            <option>Main Course</option>
-            <option>Side Dish</option>
-            <option>Dessert</option>
-            <option>Beverage</option>
-          </select>
-          <select className="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-            <option>All Status</option>
-            <option>Pending</option>
-            <option>Approved</option>
-            <option>Rejected</option>
-          </select>
-          <select className="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-            <option>Most Voted</option>
-            <option>Newest First</option>
-            <option>Oldest First</option>
-          </select>
-        </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Description
+                        </label>
+                        <textarea 
+                          className="w-full p-2 border rounded-lg focus:ring-blue-500 min-h-[100px]"
+                          placeholder="Describe the dish and why it should be added..."
+                          name="description"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <button
+                          type="submit"
+                          className="bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 transition-colors duration-200"
+                        >
+                          Submit Suggestion
+                        </button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
 
-        {/* Suggestions List */}
-        <div className="space-y-4">
-          {suggestions.map((suggestion) => (
-            <Card key={suggestion.id}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-lg">{suggestion.name}</h3>
-                      <span className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${getStatusColor(suggestion.status)}`}>
-                        {getStatusIcon(suggestion.status)}
-                        {suggestion.status.charAt(0).toUpperCase() + suggestion.status.slice(1)}
-                      </span>
+            {/* Filter Section */}
+            <div className='font-bold text-3xl'>Recent Suggestions</div>
+
+            {/* Suggestions List */}
+            <div className="space-y-4">
+              {suggestions.map((suggestion) => (
+                <Card key={suggestion.id} className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-lg">{suggestion.name}</h3>
+                          <span className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${getStatusColor(suggestion.status)}`}>
+                            {getStatusIcon(suggestion.status)}
+                            {suggestion.status.charAt(0).toUpperCase() + suggestion.status.slice(1)}
+                          </span>
+                        </div>
+                        <p className="text-gray-600">{suggestion.description}</p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span>By: {suggestion.username}</span>
+                          <span>•</span>
+                          <span>{new Date(suggestion.createdAt).toLocaleDateString()}</span>
+                          <span>•</span>
+                          <span>{suggestion.mealType}</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
+                          <ThumbsUp 
+                            className={`w-5 h-5 text-black ${likedSuggestions.includes(suggestion.id) ? 'text-blue-500 fill-blue-400' : ''}`}
+                            onClick={() => handleLike(suggestion.id)} 
+                          />
+                        </button>
+                        <span className="font-medium">{suggestion.likes}</span>
+                        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
+                          <ThumbsDown 
+                            className={`w-5 h-5 text-black ${dislikedSuggestions.includes(suggestion.id) ? 'text-blue-500 fill-blue-400' : ''}`}
+                            onClick={() => handleDislike(suggestion.id)} 
+                          />
+                        </button>
+                        <span className="font-medium">{suggestion.dislikes}</span>
+                      </div>
                     </div>
-                    <p className="text-gray-600">{suggestion.description}</p>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span>By: {suggestion.username}</span>
-                      <span>•</span>
-                      <span>{new Date(suggestion.createdAt).toLocaleDateString()}</span>
-                      <span>•</span>
-                      <span>{suggestion.mealType}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-full">
-                      <ThumbsUp className={`w-5 h-5 text-blue-500 ${likedSuggestions.includes(suggestion.id) ? 'fill-current' : ''}`} onClick={() => handleLike(suggestion.id)} />
-                    </button>
-                    <span className="font-medium">{suggestion.likes}</span>
-                    <button className="p-2 hover:bg-gray-100 rounded-full">
-                      <ThumbsDown className={`w-5 h-5 text-blue-500 ${dislikedSuggestions.includes(suggestion.id) ? 'fill-current' : ''}`} onClick={() => handleDislike(suggestion.id)} />
-                    </button>
-                    <span className="font-medium">{suggestion.dislikes}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </main>
       </div>
     </Layout>
   );
