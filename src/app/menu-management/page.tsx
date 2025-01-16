@@ -19,23 +19,6 @@ interface MenuItemType {
 const MenuManagementPage = () => {
   const redirect = useRouter();
   const [userType, setUserType] = useState<string | null>(null);
-  const [menuItems, setMenuItems] = useState<MenuItemType[]>([
-    {
-      id: '1',
-      dish: 'Paneer Butter Masala',
-      category: 'Main Course',
-      day: 'Monday',
-      mealType: 'Lunch',
-    },
-    {
-      id: '2',
-      dish: 'Mixed Fruit Salad',
-      category: 'Dessert',
-      day: 'Wednesday',
-      mealType: 'Snack',
-    },
-  ]);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [currentItem, setCurrentItem] = useState<MenuItemType | null>(null);
 
   useEffect(() => {
@@ -56,22 +39,14 @@ const MenuManagementPage = () => {
     event.preventDefault();
     const form = event.currentTarget;
     const newItem: MenuItemType = {
-      id: currentItem ? currentItem.id : (menuItems.length + 1).toString(),
+      id: Math.random().toString(),
       dish: form.dish.value,
       category: form.category.value,
       day: form.day.value,
       mealType: form.mealType.value,
     };
 
-    if (currentItem) {
-      setMenuItems(menuItems.map(item => (item.id === currentItem.id ? newItem : item)));
-    } else {
-      setMenuItems([...menuItems, newItem]);
-    }
-
     addMeal(newItem);
-    
-    setIsEditing(false);
     setCurrentItem(null);
     form.reset();
   };
@@ -112,7 +87,7 @@ const MenuManagementPage = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <PlusCircle className="w-5 h-5" />
-                      {isEditing ? 'Edit Menu Item' : 'Add New Menu Item'}
+                      Add New Menu Item
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -187,7 +162,7 @@ const MenuManagementPage = () => {
                         type="submit"
                         className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700"
                       >
-                        {isEditing ? 'Update Item' : 'Add Item'}
+                        Add Item
                       </button>
                     </form>
                   </CardContent>
