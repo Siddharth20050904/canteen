@@ -1,5 +1,7 @@
 // src/app/login/loginActions.ts
 'use server';
+import { sendMenuUpdates } from './emailActions';
+import { getUserWithEmailNotification } from './userFetch';
 
 import { PrismaClient } from '@prisma/client';
 
@@ -38,6 +40,12 @@ export async function addMeal(data: { dish: string; category: string; day: strin
         },
       });
     }
+
+    const users = await getUserWithEmailNotification();
+
+    const userEmails = users?.map((user) => user.email) || [];
+
+    await sendMenuUpdates(userEmails, {dish, category, day, mealType});
 
     return { success: true, message: 'Meal added successfully' };
   } catch (error) {

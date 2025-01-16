@@ -34,3 +34,18 @@ export async function getUserById(id: string) {
     return null;
   }
 }
+
+export async function getUserWithEmailNotification(){
+  try {
+    const user = await prisma.user.findMany({
+      where: {
+        menuNotifications: true
+      }
+    })
+    return user;
+  }
+  catch (error) {
+    console.error("Error fetching user by id:", error)
+    return null;
+  }
+}
