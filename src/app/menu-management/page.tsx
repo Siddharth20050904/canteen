@@ -20,6 +20,7 @@ const MenuManagementPage = () => {
   const redirect = useRouter();
   const [userType, setUserType] = useState<string | null>(null);
   const [currentItem, setCurrentItem] = useState<MenuItemType | null>(null);
+  const [isPosting, setIsPosting] = useState(false);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -35,8 +36,9 @@ const MenuManagementPage = () => {
     }
   }, [userType, redirect]);
 
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsPosting(true);
     const form = event.currentTarget;
     const newItem: MenuItemType = {
       id: Math.random().toString(),
@@ -46,7 +48,14 @@ const MenuManagementPage = () => {
       mealType: form.mealType.value,
     };
 
-    addMeal(newItem);
+    const res = await addMeal(newItem);
+    if(res.success){
+      alert("Meal added successfully");
+      setIsPosting(false);
+    }else{
+      alert("Failed to add meal");
+      setIsPosting(false);
+    }
     setCurrentItem(null);
     form.reset();
   };
@@ -101,7 +110,7 @@ const MenuManagementPage = () => {
                             type="text"
                             name="dish"
                             defaultValue={currentItem?.dish || ''}
-                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-2 border rounded-lg"
                             placeholder="Enter dish name"
                             required
                           />
@@ -113,7 +122,7 @@ const MenuManagementPage = () => {
                           <select
                             name="category"
                             defaultValue={currentItem?.category || ''}
-                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-2 border rounded-lg"
                             required
                           >
                             <option value="mainCourse">Main Course</option>
@@ -129,7 +138,7 @@ const MenuManagementPage = () => {
                           <select
                             name="day"
                             defaultValue={currentItem?.day || ''}
-                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-2 border rounded-lg"
                             required
                           >
                             <option>Monday</option>
@@ -148,7 +157,7 @@ const MenuManagementPage = () => {
                           <select
                             name="mealType"
                             defaultValue={currentItem?.mealType || ''}
-                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-2 border rounded-lg"
                             required
                           >
                             <option value="breakfast">Breakfast</option>
@@ -160,8 +169,8 @@ const MenuManagementPage = () => {
                       </div>
                       <button
                         type="submit"
-                        className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700"
-                      >
+                        className={`bg-green-600 text-white py-2 px-4 rounded-lg ${isPosting ? 'opacity-50 cursor-not-allowed': ' hover:bg-green-700'} `}
+                      > 
                         Add Item
                       </button>
                     </form>

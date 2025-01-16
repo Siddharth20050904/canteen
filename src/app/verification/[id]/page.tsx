@@ -159,7 +159,7 @@ const VerifyPage = ({ params }: PageProps) => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
+                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
                 >
                   Verify Email
                 </button>

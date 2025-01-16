@@ -91,7 +91,7 @@ const LoginPage = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 w-full p-3 border border-gray-300 rounded-lg"
                     placeholder="Enter your email"
                   />
                 </div>
@@ -105,7 +105,7 @@ const LoginPage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 w-full p-3 border border-gray-300 rounded-lg"
                     placeholder="Enter your password"
                   />
                 </div>
@@ -126,7 +126,7 @@ const LoginPage = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
+                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
                 >
                   Sign In
                 </button>
