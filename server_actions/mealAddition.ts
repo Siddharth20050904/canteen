@@ -44,8 +44,12 @@ export async function addMeal(data: { dish: string; category: string; day: strin
     const users = await getUserWithEmailNotification();
 
     const userEmails = users?.map((user) => user.email) || [];
-
-    await sendMenuUpdates(userEmails, {dish, category, day, mealType});
+    try {
+      await sendMenuUpdates(userEmails, {dish, category, day, mealType});
+    } catch (error) {
+      console.error('Email sending error:', error);
+      return { success: false, message: 'Meal added but email notifications failed' };
+    }
 
     return { success: true, message: 'Meal added successfully' };
   } catch (error) {
