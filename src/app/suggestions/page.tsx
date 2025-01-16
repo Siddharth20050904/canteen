@@ -32,33 +32,13 @@ const SuggestionsPage = () => {
     });
     formDataWithUserId.append('userId', user_id || '');
     formDataWithUserId.append('username', session?.user?.name || '');
-
-      // Find the maximum ID from the current suggestions
-    const maxId = suggestions.length > 0 ? Math.max(...suggestions.map(s => s.id)) : 0;
-  
-    // Optimistically update the state
-    const newSuggestion = {
-      id: maxId + 1, // Temporary ID
-      name: formObject.dish as string,
-      mealType: formObject.category as string,
-      description: formObject.description as string,
-      userId: user_id || '',
-      username: session?.user?.name || '',
-      likes: 0,
-      dislikes: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      status: 'pending',
-    };
-  
-    setSuggestions([newSuggestion, ...suggestions]);
   
     const response = await postSuggestion(formDataWithUserId);
     if (!response || !response.success) {
-      // Revert the state if the API call fails
-      setSuggestions(suggestions);
+      alert('Failed to post suggestion');
     }else{
       await logActivity(user_id || '', 'Suggestion created', 'suggestion');
+      alert('Suggestion posted successfully');
     }
   };
   useEffect(() => {
@@ -322,14 +302,14 @@ const SuggestionsPage = () => {
                       <div className="flex flex-col items-center gap-2">
                         <button className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
                           <ThumbsUp 
-                            className={`w-5 h-5 text-black ${likedSuggestions.includes(suggestion.id) ? 'text-blue-500 fill-blue-400' : ''}`}
+                            className={`w-5 h-5 text-green-400 ${likedSuggestions.includes(suggestion.id) ? 'text-green-400 fill-current' : ''}`}
                             onClick={() => handleLike(suggestion.id)} 
                           />
                         </button>
                         <span className="font-medium">{suggestion.likes}</span>
                         <button className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
                           <ThumbsDown 
-                            className={`w-5 h-5 text-black ${dislikedSuggestions.includes(suggestion.id) ? 'text-blue-500 fill-blue-400' : ''}`}
+                            className={`w-5 h-5 text-green-400 ${dislikedSuggestions.includes(suggestion.id) ? 'text-green-400 fill-current' : ''}`}
                             onClick={() => handleDislike(suggestion.id)} 
                           />
                         </button>
