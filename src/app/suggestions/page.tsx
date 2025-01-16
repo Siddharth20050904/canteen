@@ -283,20 +283,20 @@ const SuggestionsPage = () => {
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 max-w-[50vw]">
                           <h3 className="font-medium text-lg">{suggestion.name}</h3>
                           <span className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${getStatusColor(suggestion.status)}`}>
                             {getStatusIcon(suggestion.status)}
                             {suggestion.status.charAt(0).toUpperCase() + suggestion.status.slice(1)}
                           </span>
                         </div>
-                        <p className="text-gray-600">{suggestion.description}</p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <p className="text-gray-600 max-w-[50vw]">{suggestion.description}</p>
+                        <div className="flex items-center gap-[1vw] text-sm text-gray-500 max-w-[50vw]">
                           <span>By: {suggestion.username}</span>
                           <span>•</span>
                           <span>{new Date(suggestion.createdAt).toLocaleDateString()}</span>
                           <span>•</span>
-                          <span>{suggestion.mealType}</span>
+                          <span>{suggestion.mealType=='mainCourse'?'Main Course':suggestion.mealType=='sideDish'? 'Side Dish':suggestion.mealType=='beverage'? 'Beverage':'Dessert'}</span>
                         </div>
                       </div>
                       <div className="flex flex-col items-center gap-2">

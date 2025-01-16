@@ -102,7 +102,7 @@ const ProfilePage = () => {
                       <div className="space-y-4">
                         <div>
                           <h2 className="text-lg font-medium">Email</h2>
-                          <p className="text-gray-600">{userProfile.email}</p>
+                          <p className="text-gray-600 text-sm md:text-lg">{userProfile.email}</p>
                         </div>
                         <div>
                           <h2 className="text-lg font-medium">Roll Number</h2>
