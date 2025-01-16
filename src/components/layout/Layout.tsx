@@ -19,7 +19,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, noLayout }) => {
   const getUserType = async () => {
     const session = await getSession();
     const userId = session?.user.id || ''; // Replace with the actual user ID
-    if(!userId && (pathname !== '/login' && pathname !== '/register' && !pathname?.match(/^\/verification\/.*/))) {
+    if(!userId && (pathname !== '/login' && pathname !== '/register' && !pathname?.match(/^\/verification\/.*/) && pathname !== '/forgot-password'  && !pathname?.match(/^\/reset-password\/.*/) )) {
       router.push('/login');
     }
   };

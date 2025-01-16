@@ -11,7 +11,7 @@ if (typeof window === 'undefined') {
   PrismaClient = PrismaClientType;
 }
 
-function generateOTP(length: number = 6): string {
+export async function generateOTP(length: number = 6): Promise<string> {
   const digits = '0123456789';
   let otp = '';
   for (let i = 0; i < length; i++) {
@@ -36,7 +36,7 @@ export async function registerUser(data: { name: string; email: string; password
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const otp = generateOTP();
+    const otp = await generateOTP();
     const otpGeneratedAt = new Date();
 
     const newUser = await prisma.user.create({

@@ -1,6 +1,8 @@
 "use server";
 
 import { PrismaClient } from "@prisma/client";
+import { generateOTP } from "./registerActions";
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -41,3 +43,50 @@ export const getUserInfo = async (userId: string) => {
     await prisma.$disconnect();
   }
 };
+
+
+
+export async function updateMenuNotificationPreference(
+  userId: string, 
+  menuUpdates: boolean
+) {
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      menuNotifications: menuUpdates
+    }
+  })
+  return updatedUser
+}
+
+export async function updateOTP(email: string) {
+  const otp = await generateOTP();
+  const otpGeneratedAt = new Date();
+  try {
+    const user = await prisma.user.update({
+      where: { email },
+      data: {
+        otp,
+        otpGeneratedAt,
+        otpVerified: false,
+      }
+    });
+    return { otp, id: user.id };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('Unknown error occurred');
+  }
+}
+
+export async function resetPassword(userId: string, newPassword: string) {
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+    return { success: true, message: 'Password reset successful' };
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return { success: false, message: 'Failed to reset password' };
+  }
+}
