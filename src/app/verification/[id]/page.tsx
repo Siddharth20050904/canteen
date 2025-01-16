@@ -7,6 +7,8 @@ import { signIn } from 'next-auth/react';
 import { getUserById } from '../../../../server_actions/userFetch';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { updateOTP } from '../../../../server_actions/updateUserProfile';
+import { sendOTPEmail } from '../../../../server_actions/emailActions';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -101,6 +103,15 @@ const VerifyPage = ({ params }: PageProps) => {
     }
   };
 
+  const handleResend = async() => {
+    const user = await getUserById(id);
+    if(!user) return;
+    const newOtpUser = await updateOTP(user.email);
+
+    await sendOTPEmail(user.email, newOtpUser.otp);
+    alert('OTP sent successfully');
+  }
+
   return (
     <Layout noLayout={true}>
       <div className="flex min-h-screen flex-col md:flex-row">
@@ -154,7 +165,7 @@ const VerifyPage = ({ params }: PageProps) => {
                     ))}
                   </div>
                   <p className="text-sm text-gray-600 text-center">
-                    Didn&apos;t receive the code? <button type="button" className="text-blue-600 hover:underline">Resend</button>
+                    Didn&apos;t receive the code? <button type="button" className="text-blue-600 hover:underline" onClick={handleResend}>Resend</button>
                   </p>
                 </div>
                 <button

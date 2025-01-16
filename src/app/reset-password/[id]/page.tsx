@@ -2,12 +2,14 @@
 
 import React, { useState, useRef } from 'react';
 import { verifyOTP } from '../../../../server_actions/verifyOTPAction';
-import { resetPassword } from '../../../../server_actions/updateUserProfile';
+import { resetPassword, updateOTP } from '../../../../server_actions/updateUserProfile';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';
 import Image from 'next/image';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getUserById } from '../../../../server_actions/userFetch';
+import { sendOTPEmail } from '../../../../server_actions/emailActions';
 
 export default function ResetPassword({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -94,6 +96,15 @@ export default function ResetPassword({ params }: { params: Promise<{ id: string
     }
   };
 
+    const handleResend = async() => {
+      const user = await getUserById(resolvedParams.id);
+      if(!user) return;
+      const newOtpUser = await updateOTP(user.email);
+  
+      await sendOTPEmail(user.email, newOtpUser.otp);
+      alert('OTP sent successfully');
+    }
+
   return (
     <Layout noLayout={true}>
       <div className="flex min-h-screen flex-col md:flex-row">
@@ -154,7 +165,7 @@ export default function ResetPassword({ params }: { params: Promise<{ id: string
                       ))}
                     </div>
                     <p className="text-sm text-gray-600 text-center">
-                      Didn&apos;t receive the code? <button type="button" className="text-blue-600 hover:underline">Resend</button>
+                      Didn&apos;t receive the code? <button type="button" className="text-blue-600 hover:underline" onClick={handleResend}>Resend</button>
                     </p>
                   </div>
                   <button
