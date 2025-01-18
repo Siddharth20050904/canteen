@@ -18,8 +18,6 @@ const Card = React.forwardRef<
 ))
 Card.displayName = "Card"
 
-// ... (other non-skeleton components remain the same) ...
-
 const CardSkeleton = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>

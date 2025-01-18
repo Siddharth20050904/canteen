@@ -1,6 +1,8 @@
 "use client";
 import { getReviewData } from "../data/reviewChartData";
 
+// Define the type for the review datas
+
 interface Review {
   mealType: string;
   rating: number;
@@ -53,6 +55,8 @@ const initializeDayReviewStats = (day: string): DayReviewStats => ({
   snack: initializeMealReviewStats(),
   dinner: initializeMealReviewStats(),
 });
+
+// Function to get the bar plot data
 
 export const getBarPlotData = async (): Promise<DayReviewStats[]> => {
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

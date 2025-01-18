@@ -25,6 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpenAction }) => 
     fetchUserType();
   }, []);
 
+  // All Routes
   const menuItems = [
     { icon: Home, label: 'Dashboard', href: '/dashboard' },
     { icon: Calendar, label: 'Attendance', href: '/attendance' },

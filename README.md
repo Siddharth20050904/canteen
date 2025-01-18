@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Canteen Management System
 
-## Getting Started
+A Next.js-based canteen management system with features for attendance tracking, feedback collection, and menu management.
 
-First, run the development server:
+## Author
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**Siddharth Suryavanshi**
+- GitHub: [Siddharth20050904](https://github.com/Siddharth20050904)
+- LinkedIn: [Siddharth Suryavanshi](www.linkedin.com/in/siddharth-suryavanshi-087786288)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- User Authentication & Authorization
+- Attendance Management
+- Feedback System
+- Menu Management
+- Weekly Menu Planning
+- Feedback Analysis
+- Attendance Statistics
+- Suggestion System
+- Admin Dashboard
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech Stack
 
-## Learn More
+- Next.js 14
+- TypeScript
+- Prisma ORM
+- NextAuth.js
+- TailwindCSS
+- PostgreSQL
 
-To learn more about Next.js, take a look at the following resources:
+## Prerequisites
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Before you begin, ensure you have the following installed:
+- Node.js 18+ 
+- PostgreSQL database
+- npm or yarn package manager
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Setup
 
-## Deploy on Vercel
+### 1. Clone the Repository
+Clone this repository to your local machine using:
+`git clone https://github.com/Siddharth20050904/canteen.git`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 2. Install Dependencies
+Navigate to the project directory and install required packages:
+`npm install`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 3. Environment Configuration
+Create a `.env` file in the root directory with the following variables:
+
+### 4. Database Setup
+Create a PostgreSQL database and update the `DATABASE_URL` in your `.env` file.
+
+### 5. Database Migration
+Run database migrations:
+`npx prisma migrate dev`
+
+### 6. Start the Development Server
+Start the development server:
+`npm run dev`
+
+```env
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/canteen_db"
+
+# NextAuth
+NEXTAUTH_SECRET="your-secret-key"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Email (for OTP)
+MAIL_PASS="your-email-app-password"
