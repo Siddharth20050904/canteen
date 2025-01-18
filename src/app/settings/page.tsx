@@ -12,6 +12,7 @@ import { changePassword } from '../../../server_actions/changePass';
 import { Bell } from 'lucide-react';
 import { Switch } from "@/components/ui/switch"
 import { updateMenuNotificationPreference } from '../../../server_actions/updateUserProfile';
+import { signOut } from 'next-auth/react';
 
 const SettingsPage = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -67,7 +68,9 @@ const SettingsPage = () => {
     try {
       const updatedUser = await updateUserProfile(userId, name, rollNumber, preferences);
       if(updatedUser) {
-        alert('Profile updated successfully');
+        await signOut({ redirect: false });
+        alert('Profile updated successfully, please login again');
+        window.location.reload();
       }
     } catch (error) {
       console.log(error);
