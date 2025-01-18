@@ -6,14 +6,16 @@ import { useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const router = useRouter();
   const { status } = useSession();
+  const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -22,6 +24,7 @@ const LoginPage = () => {
   }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setIsLogin(true);
     e.preventDefault();
 
     try {
@@ -32,15 +35,29 @@ const LoginPage = () => {
       });
 
       if (result?.error) {
-        setError('Invalid credentials');
+        toast.error('Invalid credentials', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } else {
-        setSuccessMessage('Login successful!');
-        setError(null);
         router.push('/dashboard');
       }
     } catch (err) {
-      setError('An error occurred during login');
+      toast.error('An error occurred during login', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       console.error('Login error:', err);
+    }finally{
+      setIsLogin(false);
     }
   };
 
@@ -78,8 +95,6 @@ const LoginPage = () => {
               <p className="text-center text-gray-600 mt-2">Please sign in to your account</p>
             </CardHeader>
             <CardContent>
-              {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-              {successMessage && <p className="text-green-500 mb-4 text-center">{successMessage}</p>}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -126,7 +141,7 @@ const LoginPage = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+                  className={`w-full bg-green-600 text-white py-3 px-4 rounded-lg ${isLogin? 'cursor-not-allowed opacity-50' : 'hover:bg-green-700'} transition duration-200`}
                 >
                   Sign In
                 </button>
@@ -143,6 +158,7 @@ const LoginPage = () => {
           </Card>
         </div>
       </div>
+      <ToastContainer />
     </Layout>
   );
 };

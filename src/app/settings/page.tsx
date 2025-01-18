@@ -13,6 +13,9 @@ import { Bell } from 'lucide-react';
 import { Switch } from "@/components/ui/switch"
 import { updateMenuNotificationPreference } from '../../../server_actions/updateUserProfile';
 import { signOut } from 'next-auth/react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const SettingsPage = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -83,7 +86,15 @@ const SettingsPage = () => {
   const handlePasswordChange = async () => {
     setIsChangingPassword(true);
     if (newPassword !== confirmPassword) {
-      alert('New passwords do not match')
+      toast.error('Passwords do not match', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      setIsChangingPassword(false);
       return
     }
   
@@ -95,15 +106,36 @@ const SettingsPage = () => {
   
     try {
       await changePassword(session.user.id, currentPassword, newPassword)
-      alert('Password updated successfully')
+      toast.success('Password updated successfully', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch (error) {
       if (error instanceof Error) {
-        alert(error.message)
+        toast.error(error.message, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } else {
-        alert('Error updating password')
+        toast.error('Failed to update password', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       }
     }finally{
       setIsChangingPassword(false);
@@ -314,6 +346,7 @@ const SettingsPage = () => {
           </div>
         </main>
       </div>
+      <ToastContainer/>
     </Layout>
   );
 };

@@ -8,6 +8,8 @@ import { registerUser } from '../../../server_actions/registerActions';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import Image from "next/image";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const RegisterPage = () => {
   const { data: session } = useSession();
@@ -23,30 +25,58 @@ const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setIsRegistering(true);
     e.preventDefault();
-  
+
+
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      setIsRegistering(false);
       return;
     }
-  
+
+
     try {
       const res = await registerUser({ name, email, password });
-  
+
+
       if (res.success) {
-        setSuccessMessage(res.message);
         localStorage.setItem('temp_pass', password);
         router.push(`/verification/${res.id}`);
       } else {
-        setError(res.message || 'Registration failed');
+        toast.error(res.message ||  'Registration failed', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       }
-    } catch (err) {
-      setError('An error occurred during registration');
-      console.error('Registration error:', err);
+
+
+    } catch (error) {
+      toast.error('An error occurred during registration, please try again later', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      console.error('Registration error:', error);
+    }finally{
+      setIsRegistering(false);
     }
   };
 
@@ -78,8 +108,6 @@ const RegisterPage = () => {
               <p className="text-center text-gray-600 mt-2">Please fill in your details to register</p>
             </CardHeader>
             <CardContent>
-              {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-              {successMessage && <p className="text-green-500 mb-4 text-center">{successMessage}</p>}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -139,7 +167,7 @@ const RegisterPage = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+                  className={`w-full bg-green-600 text-white py-3 px-4 rounded-lg ${isRegistering?'opacity-50 cursor-not-allowed':'hover:bg-green-700'} transition duration-200`}
                 >
                   Create Account
                 </button>
@@ -156,6 +184,7 @@ const RegisterPage = () => {
           </Card>
         </div>
       </div>
+      <ToastContainer/>
     </Layout>
   );
 };

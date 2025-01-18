@@ -7,6 +7,8 @@ import { addMeal } from '../../../server_actions/mealAddition';
 import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface MenuItemType {
   id: string;
@@ -48,16 +50,31 @@ const MenuManagementPage = () => {
       mealType: form.mealType.value,
     };
 
-    const res = await addMeal(newItem);
-    if(res.success){
-      alert("Meal added successfully");
+    try{
+      await addMeal(newItem);
+      toast.success('Meal added successfully', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }catch(error){
+      toast.error('Failed to add meal', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      console.log(error);
+    }finally {
       setIsPosting(false);
-    }else{
-      alert("Failed to add meal");
-      setIsPosting(false);
+      setCurrentItem(null);
+      form.reset();
     }
-    setCurrentItem(null);
-    form.reset();
   };
 
   return (
@@ -181,6 +198,7 @@ const MenuManagementPage = () => {
           </div>
         </main>
       </div>
+      <ToastContainer/>
     </Layout>
   );
 };

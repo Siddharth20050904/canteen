@@ -11,15 +11,19 @@ import { Suggestion } from '@prisma/client';
 import { updateLikes, updateDislikes, getLikesByUserId, getDislikesByUserId } from '../../../server_actions/upDateLikes';
 import { logActivity } from '../../../server_actions/logActivity';
 import Image from 'next/image';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const SuggestionsPage = () => {
   // Sample suggestions data - replace with actual data from your backend
   const [suggestions, setSuggestions] = React.useState<Suggestion[]>([]);
   const [likedSuggestions, setLikedSuggestions] = React.useState<number[]>([]);
   const [dislikedSuggestions, setDislikedSuggestions] = React.useState<number[]>([]);
+  const [submitting, setSubmitting] = React.useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setSubmitting(true);
     const formData = new FormData(event.currentTarget);
   
     const session = await getSession();
@@ -35,12 +39,28 @@ const SuggestionsPage = () => {
   
     const response = await postSuggestion(formDataWithUserId);
     if (!response || !response.success) {
-      alert('Failed to post suggestion');
+      toast.success('Failed to post suggestion', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }else{
       await logActivity(user_id || '', 'Suggestion created', 'suggestion');
-      alert('Suggestion posted successfully');
+      toast.success('Suggestion posted successfully', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
+    setSubmitting(false);
   };
+
   useEffect(() => {
     const fetchLikedSuggestionsFromBackend = async () => {
       const session = await getSession();
@@ -262,7 +282,7 @@ const SuggestionsPage = () => {
                       <div className="flex justify-end">
                         <button
                           type="submit"
-                          className="bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 transition-colors duration-200"
+                          className={`bg-green-600 text-white py-2 px-6 rounded-lg ${submitting?'opacity-50 cursor-not-allowed':'hover:bg-green-700'} transition-colors duration-200`}
                         >
                           Submit Suggestion
                         </button>
@@ -273,7 +293,6 @@ const SuggestionsPage = () => {
               </div>
             </div>
 
-            {/* Filter Section */}
             <div className='font-bold text-3xl'>Recent Suggestions</div>
 
             {/* Suggestions List */}
@@ -323,6 +342,7 @@ const SuggestionsPage = () => {
           </div>
         </main>
       </div>
+      <ToastContainer/>
     </Layout>
   );
 };

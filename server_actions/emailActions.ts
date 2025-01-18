@@ -20,6 +20,7 @@ export async function sendOTPEmail(email: string, otp: string) {
   };
 
   await transporter.sendMail(mailOptions);
+  return {success: true};
 }
 
 export async function sendMenuUpdates(email: string[], data: { dish: string; category: string; day: string; mealType: string }) {

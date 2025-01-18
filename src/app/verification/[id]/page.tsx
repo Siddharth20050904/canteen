@@ -9,6 +9,8 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { updateOTP } from '../../../../server_actions/updateUserProfile';
 import { sendOTPEmail } from '../../../../server_actions/emailActions';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -19,6 +21,7 @@ const VerifyPage = ({ params }: PageProps) => {
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const index = inputRefs.current.findIndex((ref) => ref === e.currentTarget);
@@ -77,6 +80,7 @@ const VerifyPage = ({ params }: PageProps) => {
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     try {
+      setIsVerifying(true);
       e.preventDefault();
       const user = await getUserById(id);
       if(!user) return;
@@ -95,11 +99,38 @@ const VerifyPage = ({ params }: PageProps) => {
           router.push('/dashboard');
         } else {
           console.log('Login failed');
+          toast.error('Login failed', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+          setIsVerifying(false);
         }
+      }else{
+        toast.error('Invalid OTP', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        setIsVerifying(false);
       }
     } catch(err) {
       console.log(err);
-      alert('Invalid OTP');
+      toast.error("Error occured while verifying OTP, please try again", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      setIsVerifying(false);
     }
   };
 
@@ -108,8 +139,27 @@ const VerifyPage = ({ params }: PageProps) => {
     if(!user) return;
     const newOtpUser = await updateOTP(user.email);
 
-    await sendOTPEmail(user.email, newOtpUser.otp);
-    alert('OTP sent successfully');
+    const res = await sendOTPEmail(user.email, newOtpUser.otp);
+
+    if(res.success) {
+      toast.success('OTP sent successfully', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } else {
+      toast.error('Error sending OTP', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
   }
 
   return (
@@ -170,7 +220,7 @@ const VerifyPage = ({ params }: PageProps) => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+                  className={`w-full bg-green-600 text-white py-3 px-4 rounded-lg ${isVerifying?'opacity-50 cursor-not-allowed':'hover:bg-green-700'} transition duration-200`}
                 >
                   Verify Email
                 </button>
@@ -179,6 +229,7 @@ const VerifyPage = ({ params }: PageProps) => {
           </Card>
         </div>
       </div>
+      <ToastContainer/>
     </Layout>
   );
 };

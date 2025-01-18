@@ -7,20 +7,35 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const router = useRouter();
+  const [sendingOTP, setSendingOTP] = useState(false);
   
   const handleSubmit = async (e: React.FormEvent) => {
+    setSendingOTP(true);
     e.preventDefault();
-    const result = await updateOTP(email);
-    if (!result || !result.otp) {
-      alert("Failed to generate OTP, please try again.");
-      return;
+    try{
+      const result = await updateOTP(email);
+      await sendOTPEmail(email, result.otp);
+      router.push(`/reset-password/${result.id}`);
+    }catch(error){
+      toast.error("Error occured please recheck your email", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      console.log(error);
+    }finally{
+      setSendingOTP(false);
     }
-    await sendOTPEmail(email, result.otp);
-    router.push(`/reset-password/${result.id}`);
   };
 
   return (
@@ -69,7 +84,7 @@ export default function ForgotPassword() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+                  className={`w-full bg-green-600 text-white py-3 px-4 rounded-lg ${sendingOTP? 'opacity-50 cursor-not-allowed':'hover:bg-green-700'} transition duration-200`}
                 >
                   Send Reset Link
                 </button>
@@ -78,6 +93,7 @@ export default function ForgotPassword() {
           </Card>
         </div>
       </div>
+      <ToastContainer/>
     </Layout>
   );
 }

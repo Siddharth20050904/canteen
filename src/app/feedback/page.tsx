@@ -8,6 +8,8 @@ import { addReview } from '../../../server_actions/reviewAddition';
 import { useSession } from 'next-auth/react';
 import { logActivity } from '../../../server_actions/logActivity';
 import Image from 'next/image';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const FeedbackPage = () => {
   const { data: session } = useSession();
@@ -28,13 +30,38 @@ const FeedbackPage = () => {
       const response = await addReview(review);
       if (response.success) {
         await logActivity(session.user.id, 'Submitted a feedback', 'feedback');
-        window.location.reload();
+        toast.success('Feedback submitted successfully', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } else {
-        alert('Failed to submit feedback');
+        toast.error('Failed to submit feedback', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       }
     } catch(error) {
-      console.error(error);
+      toast.error('Failed to submit feedback', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      console.log(error);
     } finally {
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
       setSubmitting(false);
     }
   };
@@ -52,6 +79,7 @@ const FeedbackPage = () => {
           </div>
         </main>
       </div>
+      <ToastContainer/>
     </Layout>
   );
 };

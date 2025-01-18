@@ -10,6 +10,9 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getUserById } from '../../../../server_actions/userFetch';
 import { sendOTPEmail } from '../../../../server_actions/emailActions';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 export default function ResetPassword({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -17,6 +20,7 @@ export default function ResetPassword({ params }: { params: Promise<{ id: string
   const [newPassword, setNewPassword] = useState('');
   const [step, setStep] = useState(1);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const router = useRouter();
 
@@ -77,23 +81,49 @@ export default function ResetPassword({ params }: { params: Promise<{ id: string
 
   const handleOTPVerification = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const result = await verifyOTP(resolvedParams.id, otp.join(''));
     if (result.success) {
+      toast.success('OTP sent successfully.', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       setStep(2);
     } else {
       console.log('error');
-      alert('Invalid OTP');
+      toast.error('Error occured while sending OTP. Please try again.', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
+    setIsSubmitting(false);
   };
 
   const handlePasswordReset = async (e: React.FormEvent) => {
+    setIsSubmitting(true);
     e.preventDefault();
     const result = await resetPassword(resolvedParams.id, newPassword);
     if (result.success) {
       router.push('/login');
     } else {
-      alert('Failed to reset password. Please try again.');
+      toast.error('Failed to reset password', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
+    setIsSubmitting(false);
   };
 
     const handleResend = async() => {
@@ -101,8 +131,26 @@ export default function ResetPassword({ params }: { params: Promise<{ id: string
       if(!user) return;
       const newOtpUser = await updateOTP(user.email);
   
-      await sendOTPEmail(user.email, newOtpUser.otp);
-      alert('OTP sent successfully');
+      const res = await sendOTPEmail(user.email, newOtpUser.otp);
+      if(res.success) {
+        toast.success('OTP sent successfully.', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      } else {
+        toast.error('Error occured while sending OTP. Please try again.', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
     }
 
   return (
@@ -170,7 +218,7 @@ export default function ResetPassword({ params }: { params: Promise<{ id: string
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+                    className={`w-full bg-green-600 text-white py-3 px-4 rounded-lg ${isSubmitting?'opacity-50 cursor-not-allowed':'hover:bg-green-700 '} transition duration-200`}
                   >
                     Verify Code
                   </button>
@@ -192,7 +240,7 @@ export default function ResetPassword({ params }: { params: Promise<{ id: string
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+                    className= {`w-full bg-green-600 text-white py-3 px-4 rounded-lg ${isSubmitting?'opacity-50 cursor-not-allowed':'hover:bg-green-700 '} transition duration-200`}
                   >
                     Reset Password
                   </button>
@@ -202,6 +250,7 @@ export default function ResetPassword({ params }: { params: Promise<{ id: string
           </Card>
         </div>
       </div>
+      <ToastContainer/>
     </Layout>
   );
 }
