@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,17 +10,23 @@ import { getSession } from 'next-auth/react';
 import { updateLikes, updateDislikes, getLikesByUserId, getDislikesByUserId } from '../../../server_actions/upDateLikes';
 import { updateSuggestionStatus } from '../../../server_actions/postSuggestion';
 
+// Constants
 const ITEMS_PER_PAGE = 10;
 
+// Types
+type LikeDislikeState = number[];
+
 const ReviewSuggestionsPage = () => {
+  // State management
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [likedSuggestions, setLikedSuggestions] = useState<number[]>([]);
-  const [dislikedSuggestions, setDislikedSuggestions] = useState<number[]>([]);
+  const [likedSuggestions, setLikedSuggestions] = useState<LikeDislikeState>([]);
+  const [dislikedSuggestions, setDislikedSuggestions] = useState<LikeDislikeState>([]);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Check if user is admin
   useEffect(() => {
     const fetchUserInfo = async () => {
       const session = await getSession();
@@ -30,6 +37,7 @@ const ReviewSuggestionsPage = () => {
     fetchUserInfo();
   }, []);
 
+  // Fetch suggestions
   const fetchSuggestions = async (page: number) => {
     try {
       setLoading(true);
@@ -52,6 +60,7 @@ const ReviewSuggestionsPage = () => {
     fetchSuggestions(currentPage);
   }, [currentPage]);
 
+  // Fetch liked and disliked suggestions
   useEffect(() => {
     const fetchLikedAndDislikedSuggestions = async () => {
       const session = await getSession();
@@ -69,18 +78,19 @@ const ReviewSuggestionsPage = () => {
     fetchLikedAndDislikedSuggestions();
   }, []);
 
+  // Pagination handlers
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo(0, 0);
   };
 
+  // Render pagination
   const renderPagination = () => {
     const pages = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-    // Adjust start if we're near the end
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
@@ -113,6 +123,7 @@ const ReviewSuggestionsPage = () => {
       }
     }
 
+    // Page numbers
     for (let i = startPage; i <= endPage; i++) {
       pages.push(
         <button
@@ -164,6 +175,7 @@ const ReviewSuggestionsPage = () => {
     );
   };
 
+  // Helper functions
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
@@ -186,23 +198,7 @@ const ReviewSuggestionsPage = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchLikedAndDislikedSuggestions = async () => {
-      const session = await getSession();
-      const userId = session?.user?.id;
-      if (!userId) return;
-
-      const [likes, dislikes] = await Promise.all([
-        getLikesByUserId(userId),
-        getDislikesByUserId(userId)
-      ]);
-
-      setLikedSuggestions(likes ? likes.map((like: { id: number }) => like.id) : []);
-      setDislikedSuggestions(dislikes ? dislikes.map((dislike: { id: number }) => dislike.id) : []);
-    };
-    fetchLikedAndDislikedSuggestions();
-  }, []);
-
+  // Like and dislike handlers
   const handleLike = async (suggestionId: number) => {
     const session = await getSession();
     const userId = session?.user?.id;
@@ -285,6 +281,7 @@ const ReviewSuggestionsPage = () => {
     }
   };
 
+  // Admin action handlers
   const handleAccept = async (suggestionId: number) => {
     const updatedSuggestions = suggestions.map(suggestion =>
       suggestion.id === suggestionId ? { ...suggestion, status: 'approved' } : suggestion
@@ -310,10 +307,66 @@ const ReviewSuggestionsPage = () => {
       setSuggestions(suggestions);
       console.error('Error updating suggestion status:', error);
     }
-
-    // Implement the logic to reject the suggestion
-    console.log(`Rejected suggestion with ID: ${suggestionId}`);
   };
+
+  // Render suggestion card
+  const renderSuggestionCard = (suggestion: Suggestion) => (
+    <Card key={`suggestion-${suggestion.id}`} className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 max-w-[50vw]">
+              <h3 className="font-medium text-lg">{suggestion.name}</h3>
+              <span className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${getStatusColor(suggestion.status)}`}>
+                {getStatusIcon(suggestion.status)}
+                {suggestion.status.charAt(0).toUpperCase() + suggestion.status.slice(1)}
+              </span>
+            </div>
+            <p className="text-gray-600 max-w-[50vw]">{suggestion.description}</p>
+            {isAdmin && suggestion.status === 'pending' && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleAccept(suggestion.id)}
+                  className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                >
+                  Accept
+                </button>
+                <button
+                  onClick={() => handleReject(suggestion.id)}
+                  className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                >
+                  Reject
+                </button>
+              </div>
+            )}
+            <div className="flex items-center gap-[3vw] md:gap-4 text-sm text-gray-500 max-w-[50vw]">
+              <span>By: {suggestion.username}</span>
+              <span>•</span>
+              <span>{new Date(suggestion.createdAt).toLocaleDateString()}</span>
+              <span>•</span>
+              <span>{suggestion.mealType == 'mainCourse' ? 'Main Course' : suggestion.mealType == 'sideDish' ? 'Side Dish' : suggestion.mealType.charAt(0).toUpperCase() + suggestion.mealType.slice(1) }</span>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <button
+              className={`flex items-center gap-1`}
+              onClick={() => handleLike(suggestion.id)}
+            >
+              <ThumbsUp className={`w-4 h-4 text-green-500 ${likedSuggestions.includes(suggestion.id) ? 'fill-green-500' : ''}`} />
+              <span>{suggestion.likes}</span>
+            </button>
+            <button
+              className={`flex items-center gap-1`}
+              onClick={() => handleDislike(suggestion.id)}
+            >
+              <ThumbsDown className={`w-4 h-4 text-green-500 ${dislikedSuggestions.includes(suggestion.id) ? 'fill-green-500' : ''}`} />
+              <span>{suggestion.dislikes}</span>
+            </button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <Layout>
@@ -330,63 +383,7 @@ const ReviewSuggestionsPage = () => {
               </div>
             ) : (
               <>
-                {suggestions.map((suggestion) => (
-                  <Card key={`suggestion-${suggestion.id}`} className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 max-w-[50vw]">
-                            <h3 className="font-medium text-lg">{suggestion.name}</h3>
-                            <span className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${getStatusColor(suggestion.status)}`}>
-                              {getStatusIcon(suggestion.status)}
-                              {suggestion.status.charAt(0).toUpperCase() + suggestion.status.slice(1)}
-                            </span>
-                          </div>
-                          <p className="text-gray-600 max-w-[50vw]">{suggestion.description}</p>
-                          {isAdmin && suggestion.status === 'pending' && (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleAccept(suggestion.id)}
-                                className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
-                              >
-                                Accept
-                              </button>
-                              <button
-                                onClick={() => handleReject(suggestion.id)}
-                                className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-[3vw] md:gap-4 text-sm text-gray-500 max-w-[50vw]">
-                            <span>By: {suggestion.username}</span>
-                            <span>•</span>
-                            <span>{new Date(suggestion.createdAt).toLocaleDateString()}</span>
-                            <span>•</span>
-                            <span>{suggestion.mealType == 'mainCourse' ? 'Main Course' : suggestion.mealType == 'sideDish' ? 'Side Dish' : suggestion.mealType.charAt(0).toUpperCase() + suggestion.mealType.slice(1) }</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-center gap-2">
-                          <button
-                            className={`flex items-center gap-1`}
-                            onClick={() => handleLike(suggestion.id)}
-                          >
-                            <ThumbsUp className={`w-4 h-4 text-green-500 ${likedSuggestions.includes(suggestion.id) ? 'fill-green-500' : ''}`} />
-                            <span>{suggestion.likes}</span>
-                          </button>
-                          <button
-                            className={`flex items-center gap-1`}
-                            onClick={() => handleDislike(suggestion.id)}
-                          >
-                            <ThumbsDown className={`w-4 h-4 text-green-500 ${dislikedSuggestions.includes(suggestion.id) ? 'fill-green-500' : ''}`} />
-                            <span>{suggestion.dislikes}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                {suggestions.map((suggestion) => renderSuggestionCard(suggestion))}
                 {suggestions.length === 0 && (
                   <div className="text-center py-4 text-gray-500">
                     No suggestions available

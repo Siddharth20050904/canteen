@@ -1,40 +1,45 @@
 "use client";
-import React from 'react';
-import { useEffect, useRef } from 'react';
-import { Layout } from '@/components/layout/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Utensils } from 'lucide-react';
-import { updateUserProfile, getUserInfo } from '../../../server_actions/updateUserProfile';
-import { getSession } from 'next-auth/react';
+
+import React, { useEffect, useRef, useState } from 'react';
+import { getSession, signOut } from 'next-auth/react';
 import Image from 'next/image';
-import { Lock } from 'lucide-react';
-import { changePassword } from '../../../server_actions/changePass';
-import { Bell } from 'lucide-react';
-import { Switch } from "@/components/ui/switch"
-import { updateMenuNotificationPreference } from '../../../server_actions/updateUserProfile';
-import { signOut } from 'next-auth/react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// UI Components
+import { Layout } from '@/components/layout/Layout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from "@/components/ui/switch"
 
+// Icons
+import { User, Utensils, Lock, Bell } from 'lucide-react';
+
+// Server Actions
+import { updateUserProfile, getUserInfo, updateMenuNotificationPreference } from '../../../server_actions/updateUserProfile';
+import { changePassword } from '../../../server_actions/changePass';
+
+// Main component
 const SettingsPage = () => {
+  // Refs
   const formRef = useRef<HTMLFormElement>(null);
-  const [nameValue, setNameValue] = React.useState('');
-  const [rollNumberValue, setRollNumberValue] = React.useState('');
-  const [preferencesValue, setPreferencesValue] = React.useState('');
-  const [currentPassword, setCurrentPassword] = React.useState('');
-  const [newPassword, setNewPassword] = React.useState('');
-  const [confirmPassword, setConfirmPassword] = React.useState('');
-  const [isChangingProfile, setIsChangingProfile] = React.useState(false);
-  const [isChangingPassword, setIsChangingPassword] = React.useState(false);
-  const [menuNotifications, setMenuNotifications] = React.useState(false);
 
+  // State variables
+  const [nameValue, setNameValue] = useState('');
+  const [rollNumberValue, setRollNumberValue] = useState('');
+  const [preferencesValue, setPreferencesValue] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingProfile, setIsChangingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [menuNotifications, setMenuNotifications] = useState(false);
+
+  // Fetch user info on component mount
   useEffect(() => {
     const fetchUserInfo = async () => {
       const session = await getSession();
-      if (!session) {
-        return;
-      }
+      if (!session) return;
+
       const userId = session.user.id;
       const userInfo = await getUserInfo(userId);
       if (userInfo) {
@@ -47,20 +52,18 @@ const SettingsPage = () => {
     fetchUserInfo();
   }, []);
 
+  // Handle profile change submission
   const handleSubmitProfileChange = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsChangingProfile(true);
     const session = await getSession();
 
-    if (!session) {
-      return;
-    }
+    if (!session) return;
 
     const userId = session.user.id;
     const form = formRef.current;
-    if (!form) {
-      return;
-    }
+    if (!form) return;
+
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
 
@@ -78,80 +81,54 @@ const SettingsPage = () => {
     } catch (error) {
       console.log(error);
       alert('Error updating profile');
-    }finally{ 
+    } finally { 
       setIsChangingProfile(false);
     }
   }
 
+  // Handle password change
   const handlePasswordChange = async () => {
     setIsChangingPassword(true);
     if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.error('Passwords do not match');
       setIsChangingPassword(false);
-      return
+      return;
     }
   
-    const session = await getSession()
+    const session = await getSession();
     if (!session) {
-      alert('Please login to change password')
-      return
+      alert('Please login to change password');
+      return;
     }
   
     try {
-      await changePassword(session.user.id, currentPassword, newPassword)
-      toast.success('Password updated successfully', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
+      await changePassword(session.user.id, currentPassword, newPassword);
+      toast.success('Password updated successfully');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (error) {
       if (error instanceof Error) {
-        toast.error(error.message, {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        toast.error(error.message);
       } else {
-        toast.error('Failed to update password', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        toast.error('Failed to update password');
       }
-    }finally{
+    } finally {
       setIsChangingPassword(false);
     }
   }
 
+  // Handle notification preference change
   const handleNotificationChange = async () => {
     const session = await getSession();
     if (!session) return;
   
     try {
       await updateMenuNotificationPreference(session.user.id, menuNotifications);
-      alert('Notification preference updated successfully');
+      toast.success('Notification preference updated successfully');
     } catch (error) {
       console.error(error);
-      alert('Failed to update notification preference');
+      toast.error('Failed to update notification preference');
     }
   };
 
@@ -256,6 +233,7 @@ const SettingsPage = () => {
                   </CardContent>
                 </Card>
               </form>
+              {/* Email Notifications Card */}
               <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200 mb-8">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -287,6 +265,7 @@ const SettingsPage = () => {
                   </div>
                 </CardContent>
               </Card>
+              {/* Change Password Card */}
               <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -352,3 +331,4 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
+

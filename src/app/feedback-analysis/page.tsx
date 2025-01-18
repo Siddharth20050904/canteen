@@ -1,19 +1,33 @@
-"use client";
+'use client';
+
+// Import necessary components and libraries
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pie, Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { 
+  Chart as ChartJS, 
+  ArcElement, 
+  Tooltip, 
+  Legend, 
+  CategoryScale, 
+  LinearScale, 
+  BarElement, 
+  Title 
+} from 'chart.js';
 import { PieData } from '../../../data/reviewChartData';
 import { getBarPlotData, DayReviewStats } from '../../../data/getBarPlot';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
+// Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 const FeedbackAnalysisPage = () => {
+  // State for storing bar plot data and pie chart values
   const [barPlotData, setBarPlotData] = useState<DayReviewStats[]>([]);
   const [pieDataValues, setPieDataValues] = useState({ posRev: 0, neuRev: 0, negRev: 0 });
 
+  // Fetch data on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -29,6 +43,7 @@ const FeedbackAnalysisPage = () => {
     fetchData();
   }, []);
 
+  // Configuration for pie chart
   const pieData = {
     labels: ['Positive', 'Neutral', 'Negative'],
     datasets: [
@@ -39,16 +54,13 @@ const FeedbackAnalysisPage = () => {
     ],
   };
 
+  // Configuration for bar chart
   const options = {
     scales: {
       x: {
-        grid: {
-          display: false
-        },
+        grid: { display: false },
         ticks: {
-          font: {
-            size: 12
-          },
+          font: { size: 12 },
           maxRotation: 90,
           minRotation: 90,
           autoSkip: false
@@ -63,9 +75,7 @@ const FeedbackAnalysisPage = () => {
       }
     },
     plugins: {
-      legend: {
-        position: 'top' as const
-      },
+      legend: { position: 'top' as const },
       title: {
         display: true,
         text: 'Reviews by Meal Time'
@@ -74,12 +84,11 @@ const FeedbackAnalysisPage = () => {
     responsive: true,
     maintainAspectRatio: false,
     layout: {
-      padding: {
-        top: 20
-      }
+      padding: { top: 20 }
     }
   };
 
+  // Data for bar chart
   const barData = {
     labels: [
       'Sun-Breakfast', 'Sun-Lunch', 'Sun-Snacks', 'Sun-Dinner',
@@ -199,3 +208,4 @@ const FeedbackAnalysisPage = () => {
 };
 
 export default FeedbackAnalysisPage;
+

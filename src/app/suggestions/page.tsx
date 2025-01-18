@@ -1,9 +1,10 @@
 // src/app/suggestions/page.tsx
 "use client";
+
 import React, { useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {ChefHat, Check, X, Clock, ThumbsUp, ThumbsDown} from 'lucide-react';
+import { ChefHat, Check, X, Clock, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { postSuggestion } from '../../../server_actions/postSuggestion';
 import { getSession } from 'next-auth/react';
 import { getTopThreeSuggestions } from '../../../server_actions/getSuggestion';
@@ -15,20 +16,20 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const SuggestionsPage = () => {
-  // Sample suggestions data - replace with actual data from your backend
   const [suggestions, setSuggestions] = React.useState<Suggestion[]>([]);
   const [likedSuggestions, setLikedSuggestions] = React.useState<number[]>([]);
   const [dislikedSuggestions, setDislikedSuggestions] = React.useState<number[]>([]);
   const [submitting, setSubmitting] = React.useState(false);
 
+  // Handle form submission for new suggestions
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
+
     const formData = new FormData(event.currentTarget);
-  
     const session = await getSession();
     const user_id = session?.user?.id;
-  
+
     const formObject = Object.fromEntries(formData.entries());
     const formDataWithUserId = new FormData();
     Object.entries(formObject).forEach(([key, value]) => {
@@ -36,10 +37,10 @@ const SuggestionsPage = () => {
     });
     formDataWithUserId.append('userId', user_id || '');
     formDataWithUserId.append('username', session?.user?.name || '');
-  
+
     const response = await postSuggestion(formDataWithUserId);
     if (!response || !response.success) {
-      toast.success('Failed to post suggestion', {
+      toast.error('Failed to post suggestion', {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -47,7 +48,7 @@ const SuggestionsPage = () => {
         pauseOnHover: true,
         draggable: true,
       });
-    }else{
+    } else {
       await logActivity(user_id || '', 'Suggestion created', 'suggestion');
       toast.success('Suggestion posted successfully', {
         position: "top-right",
@@ -60,34 +61,29 @@ const SuggestionsPage = () => {
     }
     setSubmitting(false);
   };
-
+  // Fetch likes and dislikes for the user
   useEffect(() => {
     const fetchLikedSuggestionsFromBackend = async () => {
       const session = await getSession();
       const userId = session?.user?.id;
       const likes = await getLikesByUserId(userId || '');
       const dislikes = await getDislikesByUserId(userId || '');
-      if (likes) {
-        setLikedSuggestions(likes.map((like: { id: number }) => like.id));
-      }
-      if(dislikes) {
-        setDislikedSuggestions(dislikes.map((dislike: { id: number }) => dislike.id));
-      }
+      if (likes) setLikedSuggestions(likes.map((like: { id: number }) => like.id));
+      if (dislikes) setDislikedSuggestions(dislikes.map((dislike: { id: number }) => dislike.id));
     };
     fetchLikedSuggestionsFromBackend();
-  }
-  , []);
+  }, []);
 
+  // Fetch top three suggestions
   useEffect(() => {
     const fetchSuggestions = async () => {
       const res = await getTopThreeSuggestions();
-      if (res) {
-        setSuggestions(res);
-      }
+      if (res) setSuggestions(res);
     };
     fetchSuggestions();
   }, []);
 
+  // Determine color based on suggestion status
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
@@ -99,6 +95,7 @@ const SuggestionsPage = () => {
     }
   };
 
+  // Determine icon based on suggestion status
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved':
@@ -110,99 +107,71 @@ const SuggestionsPage = () => {
     }
   };
 
+  // Handle like button action
   const handleLike = async (suggestionId: number) => {
     const session = await getSession();
     const userId = session?.user?.id;
+    if (!userId || likedSuggestions.includes(suggestionId)) return;
 
-    if (!userId) {
-      return;
-    }
-
-    if(likedSuggestions.includes(suggestionId)){
-      return;
-    }
-
-    // Optimistically update the state
-    setLikedSuggestions([...likedSuggestions, suggestionId]);
-    setDislikedSuggestions(dislikedSuggestions.filter(id => id !== suggestionId));
-    setSuggestions(suggestions.map(suggestion => {
-      if (suggestion.id === suggestionId) {
-        return {
-          ...suggestion,
-          likes: suggestion.likes + 1,
-          dislikes: suggestion.dislikes > 0 ? suggestion.dislikes - 1 : suggestion.dislikes
-        };
-      }
-      return suggestion;
-    }));
-
+    optimisticallyUpdateState('like', suggestionId);
     const response = await updateLikes(suggestionId, userId || '');
-    if (!response.success) {
-      // Revert the state if the API call fails
-      setLikedSuggestions(likedSuggestions);
-      setDislikedSuggestions([...dislikedSuggestions, suggestionId]);
-      setSuggestions(suggestions.map(suggestion => {
-        if (suggestion.id === suggestionId && !dislikedSuggestions.includes(suggestionId)) {
-          return {
-            ...suggestion,
-            likes: suggestion.likes - 1,
-            dislikes: suggestion.dislikes + 1
-          };
-        }
-        return suggestion;
-      }));
-    }
+    if (!response.success) revertState('like', suggestionId);
   };
 
+  // Handle dislike button action
   const handleDislike = async (suggestionId: number) => {
     const session = await getSession();
     const userId = session?.user?.id;
+    if (!userId || dislikedSuggestions.includes(suggestionId)) return;
 
-    if (!userId) {
-      // Handle unauthenticated user case
-      return;
+    optimisticallyUpdateState('dislike', suggestionId);
+    const response = await updateDislikes(suggestionId, userId || '');
+    if (!response.success) revertState('dislike', suggestionId);
+  };
+
+  // Optimistically update like/dislike state
+  const optimisticallyUpdateState = (action: 'like' | 'dislike', suggestionId: number) => {
+    if (action === 'like') {
+      setLikedSuggestions([...likedSuggestions, suggestionId]);
+      setDislikedSuggestions(dislikedSuggestions.filter(id => id !== suggestionId));
+      updateSuggestionCount(suggestionId, 1, -1);
+    } else {
+      setDislikedSuggestions([...dislikedSuggestions, suggestionId]);
+      setLikedSuggestions(likedSuggestions.filter(id => id !== suggestionId));
+      updateSuggestionCount(suggestionId, -1, 1);
     }
+  };
 
-    if(dislikedSuggestions.includes(suggestionId)){
-      return;
+  // Revert like/dislike state if API call fails
+  const revertState = (action: 'like' | 'dislike', suggestionId: number) => {
+    if (action === 'like') {
+      setLikedSuggestions(likedSuggestions);
+      setDislikedSuggestions([...dislikedSuggestions, suggestionId]);
+      updateSuggestionCount(suggestionId, -1, 1);
+    } else {
+      setDislikedSuggestions(dislikedSuggestions);
+      setLikedSuggestions([...likedSuggestions, suggestionId]);
+      updateSuggestionCount(suggestionId, 1, -1);
     }
+  };
 
-    // Optimistically update the state
-    setDislikedSuggestions([...dislikedSuggestions, suggestionId]);
-    setLikedSuggestions(likedSuggestions.filter(id => id !== suggestionId));
+  // Update suggestion count based on like or dislike
+  const updateSuggestionCount = (suggestionId: number, likeChange: number, dislikeChange: number) => {
     setSuggestions(suggestions.map(suggestion => {
       if (suggestion.id === suggestionId) {
         return {
           ...suggestion,
-          dislikes: suggestion.dislikes + 1,
-          likes: suggestion.likes > 0 ? suggestion.likes - 1 : suggestion.likes
+          likes: suggestion.likes + likeChange,
+          dislikes: suggestion.dislikes + dislikeChange
         };
       }
       return suggestion;
     }));
-
-    const response = await updateDislikes(suggestionId, userId || '');
-    if (!response.success) {
-      // Revert the state if the API call fails
-      setDislikedSuggestions(dislikedSuggestions);
-      setLikedSuggestions([...likedSuggestions, suggestionId]);
-      setSuggestions(suggestions.map(suggestion => {
-        if (suggestion.id === suggestionId) {
-          return {
-            ...suggestion,
-            dislikes: suggestion.dislikes - 1,
-            likes: suggestion.likes + 1
-          };
-        }
-        return suggestion;
-      }));
-    }
   };
 
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-50">
-        {/* Page Header */}
         <div className="text-center py-8 px-[5vw] grid grid-cols-1 lg:grid-cols-2">
           <div/>
           <h1 className="text-2xl font-bold">Menu Suggestions</h1>
@@ -212,9 +181,7 @@ const SuggestionsPage = () => {
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="space-y-8">
-            {/* Top Section - Hero Image and Form */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Hero Image */}
               <div className="flex items-start justify-center">
                 <div className="relative w-full max-w-[500px]">
                   <div className="pb-[100%]">
@@ -230,7 +197,6 @@ const SuggestionsPage = () => {
                 </div>
               </div>
 
-              {/* Submit Suggestion Card */}
               <div>
                 <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
                   <CardHeader>
@@ -258,7 +224,11 @@ const SuggestionsPage = () => {
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Category
                           </label>
-                          <select className="w-full p-2 border rounded-lg focus:ring-blue-500" name="category" required>
+                          <select 
+                            className="w-full p-2 border rounded-lg focus:ring-blue-500" 
+                            name="category" 
+                            required
+                          >
                             <option value="mainCourse">Main Course</option>
                             <option value="sideDish">Side Dish</option>
                             <option value="dessert">Dessert</option>
@@ -266,7 +236,6 @@ const SuggestionsPage = () => {
                           </select>
                         </div>
                       </div>
-
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Description
@@ -278,11 +247,10 @@ const SuggestionsPage = () => {
                           required
                         />
                       </div>
-                      
                       <div className="flex justify-end">
                         <button
                           type="submit"
-                          className={`bg-green-600 text-white py-2 px-6 rounded-lg ${submitting?'opacity-50 cursor-not-allowed':'hover:bg-green-700'} transition-colors duration-200`}
+                          className={`bg-green-600 text-white py-2 px-6 rounded-lg ${submitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'} transition-colors duration-200`}
                         >
                           Submit Suggestion
                         </button>
@@ -293,9 +261,8 @@ const SuggestionsPage = () => {
               </div>
             </div>
 
-            <div className='font-bold text-3xl'>Recent Suggestions</div>
+            <div className="font-bold text-3xl">Recent Suggestions</div>
 
-            {/* Suggestions List */}
             <div className="space-y-4">
               {suggestions.map((suggestion) => (
                 <Card key={suggestion.id} className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -315,7 +282,7 @@ const SuggestionsPage = () => {
                           <span>•</span>
                           <span>{new Date(suggestion.createdAt).toLocaleDateString()}</span>
                           <span>•</span>
-                          <span>{suggestion.mealType=='mainCourse'?'Main Course':suggestion.mealType=='sideDish'? 'Side Dish':suggestion.mealType=='beverage'? 'Beverage':'Dessert'}</span>
+                          <span>{suggestion.mealType === 'mainCourse' ? 'Main Course' : suggestion.mealType === 'sideDish' ? 'Side Dish' : suggestion.mealType === 'beverage' ? 'Beverage' : 'Dessert'}</span>
                         </div>
                       </div>
                       <div className="flex flex-col items-center gap-2">

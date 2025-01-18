@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect, useCallback } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Clock, Calendar, Check, Percent, ChefHat } from 'lucide-react';
@@ -12,6 +13,7 @@ import { getAttendanceStatsByUserId } from '../../../data/userAttendaneStats';
 import { logActivity } from '../../../server_actions/logActivity';
 import Image from 'next/image';
 
+// ===== Type Definitions =====
 interface MealType {
   id: string;
   name: string;
@@ -24,7 +26,18 @@ interface AttendanceStats {
   total: number;
 }
 
+/**
+ * AttendancePage Component
+ * 
+ * A comprehensive page component for managing meal attendance.
+ * Features include:
+ * - Displaying daily meals
+ * - Marking attendance
+ * - Showing attendance statistics
+ * - Real-time status updates
+ */
 const AttendancePage = () => {
+  // ===== State Management =====
   const [todayMeals, setTodayMeals] = useState<MealType[]>([]);
   const { data: session } = useSession();
   const userId = session?.user?.id;
@@ -33,6 +46,11 @@ const AttendancePage = () => {
   const [loading, setLoading] = useState(true);
   const [loadingAttendance, setLoadingAttendance] = useState(true);
 
+  // ===== Utility Functions =====
+  /**
+   * Determines the status of a meal based on its scheduled time
+   * @param mealTime - Time of the meal in HH:mm format
+   */
   const getMealStatus = useCallback((mealTime: string): 'upcoming' | 'marked' | 'missed' => {
     const now = new Date();
     const [hours] = mealTime.split(':').map(Number);
@@ -51,6 +69,10 @@ const AttendancePage = () => {
     return 'upcoming';
   }, []);
 
+  // ===== Data Fetching Functions =====
+  /**
+   * Fetches and formats the daily menu data
+   */
   const fetchMenuData = useCallback(async () => {
     try {
       const menuData = await currentDayMenuData();
@@ -68,6 +90,10 @@ const AttendancePage = () => {
     }
   }, [getMealStatus]);
 
+  /**
+   * Fetches attendance status for a specific user
+   * @param userId - ID of the user
+   */
   const fetchAttendanceStatus = useCallback(async (userId: string) => {
     try {
       setLoadingAttendance(true);
@@ -80,6 +106,7 @@ const AttendancePage = () => {
         markedAt: a.markedAt
       })));
     
+      // Update meal status based on attendance records
       setTodayMeals(currentMeals => 
         currentMeals.map(meal => ({
           ...meal,
@@ -93,6 +120,10 @@ const AttendancePage = () => {
     }
   }, []);
 
+  /**
+   * Fetches attendance statistics for a specific user
+   * @param userId - ID of the user
+   */
   const fetchAttendanceStats = useCallback(async (userId: string) => {
     try {
       const stats = await getAttendanceStatsByUserId(userId);
@@ -102,10 +133,13 @@ const AttendancePage = () => {
     }
   }, []);
 
+  // ===== Effect Hooks =====
+  // Initialize menu data
   useEffect(() => {
     fetchMenuData();
   }, [fetchMenuData]);
 
+  // Load user-specific data when userId is available
   useEffect(() => {
     if (userId) {
       fetchAttendanceStatus(userId);
@@ -113,13 +147,19 @@ const AttendancePage = () => {
     }
   }, [userId, fetchAttendanceStatus, fetchAttendanceStats]);
 
+  // ===== Event Handlers =====
+  /**
+   * Handles marking attendance for a specific meal
+   * @param mealId - ID of the meal
+   * @param status - Attendance status (present/absent)
+   */
   const handleMarkAttendance = async (mealId: string, status: 'present' | 'absent') => {
     if (!userId) {
       console.error('User ID is undefined');
       return;
     }
 
-    // Optimistically update the local state
+    // Optimistic update
     const previousMeals = [...todayMeals];
     setTodayMeals(prevMeals => 
       prevMeals.map(meal => 
@@ -132,15 +172,17 @@ const AttendancePage = () => {
     try {
       await markAttendance(userId, mealId, status);
       await logActivity(userId, `Marked attendance for ${mealId} as ${status}`, 'attendance');
-      // Refresh attendance stats after marking attendance
       await fetchAttendanceStats(userId);
     } catch (error) {
       console.error('Failed to mark attendance:', error);
-      // Revert the state if there's an error
-      setTodayMeals(previousMeals);
+      setTodayMeals(previousMeals); // Revert on error
     }
   };
 
+  // ===== UI Helper Functions =====
+  /**
+   * Determines the color scheme for meal status display
+   */
   const getStatusColor = (meal: MealType, attendance: Attendance[]) => {
     const attendanceRecord = attendance.find(a => a.mealId === meal.id);
     
@@ -160,6 +202,10 @@ const AttendancePage = () => {
     }
   };
 
+  // ===== Render Components =====
+  /**
+   * Renders attendance statistics cards
+   */
   const renderStats = () => {
     const stats = [
       { title: 'Total Meal', value: `${attendanceStats.total}`, icon: Calendar },
@@ -190,6 +236,9 @@ const AttendancePage = () => {
     );
   };
 
+  /**
+   * Renders the meals list with attendance marking functionality
+   */
   const renderMeals = () => (
     <Card className='bg-white shadow-md hover:shadow-lg transition-shadow duration-200'>
       <CardHeader>
@@ -241,7 +290,7 @@ const AttendancePage = () => {
                           </button>
                           <button
                             onClick={() => handleMarkAttendance(meal.id, 'present')}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:px-2"
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm sm:px-2"
                           >
                             Mark Attendance
                           </button>
@@ -261,6 +310,7 @@ const AttendancePage = () => {
     </Card>
   );
 
+  // ===== Main Render =====
   return (
     <Layout>
       <div className="space-y-6 bg-gradient-to-br from-green-50 to-gray-50">
@@ -301,4 +351,3 @@ const AttendancePage = () => {
 };
 
 export default AttendancePage;
-

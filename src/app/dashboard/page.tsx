@@ -1,17 +1,29 @@
 "use client";
+
+/**
+ * @fileoverview Dashboard page component that displays user statistics, today's menu,
+ * and recent activity. The dashboard includes attendance tracking, meal counts,
+ * reviews given, and a visualization of the day's menu items.
+ */
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
+
+// UI Components
 import { Card, CardContent, CardHeader, CardTitle, CardContentSkeleton } from "@/components/ui/card";
-import { Calendar, ChefHat, MessageSquare, TrendingUp, Edit3 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
+import { Calendar, ChefHat, MessageSquare, TrendingUp, Edit3 } from 'lucide-react';
+
+// Server Actions and Data Fetching
 import { currentDayMenuData } from '../../../data/menuData';
 import { getAttendanceStatsByUserId } from '../../../data/userAttendaneStats';
 import { getTotalReviewsByUserId } from '../../../server_actions/fetchRevByUserId';
 import { recentActivityByUserId } from '../../../server_actions/logActivity';
 import { deletionJobScheduler } from '../../../server_actions/cron-job';
-import Image from 'next/image';
 
+// Type Definitions
 interface MenuItem {
   meal: string;
   items: string;
@@ -29,21 +41,40 @@ interface ActivityItem {
   timestamp: string;
 }
 
+/**
+ * DashboardPage Component
+ * 
+ * Main dashboard view that displays user statistics, menu information,
+ * and recent activity. Handles authentication state and data fetching.
+ * 
+ * @returns {JSX.Element} The dashboard page component
+ */
 const DashboardPage = () => {
+  // Hooks initialization
   const router = useRouter();
   const session = useSession();
+
+  // State management
   const [todayMenu, setTodayMenu] = useState<MenuItem[]>([]);
   const [attendanceStats, setAttendanceStats] = useState<AttendanceStats>({ present: 0, total: 0 });
   const [totalReviews, setTotalReviews] = useState<number>(0);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  
+  // Loading states
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [loadingAttendance, setLoadingAttendance] = useState(true);
   const [loadingActivity, setLoadingActivity] = useState(true);
 
+  /**
+   * Initialize deletion job scheduler on component mount
+   */
   useEffect(() => {
     deletionJobScheduler();
   }, []);
 
+  /**
+   * Fetches today's menu data
+   */
   const fetchMenu = useCallback(async () => {
     setLoadingMenu(true);
     try {
@@ -56,6 +87,10 @@ const DashboardPage = () => {
     }
   }, []);
 
+  /**
+   * Fetches user's attendance statistics
+   * @param {string} userId - The user's ID
+   */
   const fetchAttendanceStats = useCallback(async (userId: string) => {
     setLoadingAttendance(true);
     try {
@@ -68,6 +103,10 @@ const DashboardPage = () => {
     }
   }, []);
 
+  /**
+   * Fetches total number of reviews by user
+   * @param {string} userId - The user's ID
+   */
   const fetchTotalReviews = useCallback(async (userId: string) => {
     try {
       const totalRev = await getTotalReviewsByUserId(userId);
@@ -77,6 +116,10 @@ const DashboardPage = () => {
     }
   }, []);
 
+  /**
+   * Fetches and formats recent user activity
+   * @param {string} userId - The user's ID
+   */
   const fetchRecentActivity = useCallback(async (userId: string) => {
     setLoadingActivity(true);
     const timeNow = new Date();
@@ -85,7 +128,7 @@ const DashboardPage = () => {
       setRecentActivity(activity.slice(0, 3).map(ele => ({
         activity: ele.activity,
         type: ele.type,
-        timestamp: (timeNow.getDate() - ele.timestamp.getDate() > 0 ? "1 Day ago" : (timeNow.getHours() - ele.timestamp.getHours() > 0 ? timeNow.getHours() - ele.timestamp.getHours() + " hours ago" : (timeNow.getMinutes() - ele.timestamp.getMinutes() > 0 ? timeNow.getMinutes() - ele.timestamp.getMinutes() + " minutes ago" : "Just now")))
+        timestamp: formatTimestamp(timeNow, ele.timestamp)
       })));
     } catch (error) {
       console.error('Error fetching recent activity:', error);
@@ -94,6 +137,24 @@ const DashboardPage = () => {
     }
   }, []);
 
+  /**
+   * Formats timestamp to relative time string
+   * @param {Date} now - Current time
+   * @param {Date} timestamp - Activity timestamp
+   * @returns {string} Formatted relative time
+   */
+  const formatTimestamp = (now: Date, timestamp: Date): string => {
+    if (now.getDate() - timestamp.getDate() > 0) return "1 Day ago";
+    if (now.getHours() - timestamp.getHours() > 0) {
+      return `${now.getHours() - timestamp.getHours()} hours ago`;
+    }
+    if (now.getMinutes() - timestamp.getMinutes() > 0) {
+      return `${now.getMinutes() - timestamp.getMinutes()} minutes ago`;
+    }
+    return "Just now";
+  };
+
+  // Authentication and initial data fetch
   useEffect(() => {
     if (session.status === "unauthenticated") {
       router.push('/login');
@@ -103,6 +164,7 @@ const DashboardPage = () => {
     fetchMenu();
   }, [session.status, router, fetchMenu]);
 
+  // Fetch user-specific data when authenticated
   useEffect(() => {
     if (session.status === "authenticated" && session.data?.user?.id) {
       const userId = session.data.user.id;
@@ -116,11 +178,26 @@ const DashboardPage = () => {
     return <div>Loading...</div>;
   }
 
+  /**
+   * Renders statistics cards section
+   */
   const renderStats = () => {
     const stats = [
-      { title: "Attendance", value: `${((attendanceStats.present / attendanceStats.total) * 100).toFixed(2)}%`, icon: Calendar },
-      { title: "Reviews Given", value: totalReviews, icon: MessageSquare },
-      { title: "Total Meals", value: attendanceStats.present, icon: ChefHat }
+      { 
+        title: "Attendance", 
+        value: `${((attendanceStats.present / attendanceStats.total) * 100).toFixed(2)}%`, 
+        icon: Calendar 
+      },
+      { 
+        title: "Reviews Given", 
+        value: totalReviews, 
+        icon: MessageSquare 
+      },
+      { 
+        title: "Total Meals", 
+        value: attendanceStats.present, 
+        icon: ChefHat 
+      }
     ];
 
     return (
@@ -148,6 +225,9 @@ const DashboardPage = () => {
     );
   };
 
+  /**
+   * Renders today's menu section
+   */
   const renderTodayMenu = () => (
     <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
       <CardHeader className="border-b border-gray-100">
@@ -180,6 +260,9 @@ const DashboardPage = () => {
     </Card>
   );
 
+  /**
+   * Renders recent activity section
+   */
   const renderRecentActivity = () => (
     <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-200">
       <CardHeader className="border-b border-gray-100">
@@ -199,13 +282,7 @@ const DashboardPage = () => {
               recentActivity.map((activity, index) => (
                 <div key={index} className="flex items-center gap-4 pb-4 last:pb-0 last:border-0 border-b border-gray-100">
                   <div className="p-2 rounded-full bg-green-100">
-                    {activity.type === 'feedback' ? (
-                      <MessageSquare className="w-5 h-5 text-green-600" />
-                    ) : activity.type === 'suggestion' ? (
-                      <Edit3 className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <Calendar className="w-5 h-5 text-green-600" />
-                    )}
+                    {getActivityIcon(activity.type)}
                   </div>
                   <div className="flex-1">
                     <h3 className="font-medium text-gray-900">{activity.activity}</h3>
@@ -222,6 +299,22 @@ const DashboardPage = () => {
     </Card>
   );
 
+  /**
+   * Returns appropriate icon component based on activity type
+   * @param {string} type - Activity type
+   * @returns {JSX.Element} Icon component
+   */
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'feedback':
+        return <MessageSquare className="w-5 h-5 text-green-600" />;
+      case 'suggestion':
+        return <Edit3 className="w-5 h-5 text-green-600" />;
+      default:
+        return <Calendar className="w-5 h-5 text-green-600" />;
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6 min-h-screen bg-gradient-to-br from-green-50 to-gray-50">
@@ -232,6 +325,7 @@ const DashboardPage = () => {
           <div></div>
           <p className="text-gray-600">Track your activity and today&apos;s meal</p>
         </div>
+        
         <main className="max-w-9xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Left Column - Hero Image */}
@@ -266,4 +360,3 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
-

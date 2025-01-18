@@ -100,7 +100,7 @@ export async function updateDislikes(suggestionId: number, userId: string) {
     });
 
     // Increment dislikes, connect user to dislikedBy, and decrement likes if necessary
-    const suggestion = await prisma.suggestion.update({
+    await prisma.suggestion.update({
       where: {
         id: suggestionId
       },
@@ -125,8 +125,6 @@ export async function updateDislikes(suggestionId: number, userId: string) {
         })
       }
     });
-
-    console.log(suggestion);
     return { success: true, message: "Dislikes updated successfully" };
   } catch (error) {
     console.error("Error updating dislikes:", error);

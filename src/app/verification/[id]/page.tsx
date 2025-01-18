@@ -1,4 +1,6 @@
 "use client";
+
+// Import necessary libraries and components
 import React, { useRef, useState } from 'react';
 import { verifyOTP } from '../../../../server_actions/verifyOTPAction';
 import { Layout } from '@/components/layout/Layout';
@@ -17,24 +19,21 @@ interface PageProps {
 }
 
 const VerifyPage = ({ params }: PageProps) => {
+  // Extract user ID from params
   const { id } = React.use(params);
+
+  // State management for OTP and verification
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
   const [isVerifying, setIsVerifying] = useState(false);
 
+  // Handle key events for OTP input
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const index = inputRefs.current.findIndex((ref) => ref === e.currentTarget);
-    if (
-      !/^[0-9]{1}$/.test(e.key) &&
-      e.key !== "Backspace" &&
-      e.key !== "Delete" &&
-      e.key !== "Tab" &&
-      !e.metaKey
-    ) {
+    if (!/^[0-9]{1}$/.test(e.key) && e.key !== "Backspace" && e.key !== "Delete" && e.key !== "Tab" && !e.metaKey) {
       e.preventDefault();
     }
-
     if (e.key === "Backspace" || e.key === "Delete") {
       e.preventDefault();
       setOtp((prevOtp) => {
@@ -42,13 +41,13 @@ const VerifyPage = ({ params }: PageProps) => {
         updatedOtp[index] = "";
         return updatedOtp;
       });
-  
       if (index > 0) {
         (inputRefs.current[index - 1] as HTMLInputElement)?.focus();
       }
     }
   };
 
+  // Handle input for OTP fields
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { target } = e;
     const index = inputRefs.current.findIndex((ref) => ref === target);
@@ -64,29 +63,30 @@ const VerifyPage = ({ params }: PageProps) => {
     }
   };
 
+  // Select text on focus
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.select();
   };
 
+  // Handle OTP paste
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const text = e.clipboardData.getData("text");
-    if (!new RegExp(`^[0-9]{${otp.length}}$`).test(text)) {
-      return;
-    }
+    if (!new RegExp(`^[0-9]{${otp.length}}$`).test(text)) return;
     const digits = text.split("");
     setOtp(digits);
   };
 
+  // Submit handler for OTP verification
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     try {
       setIsVerifying(true);
       e.preventDefault();
       const user = await getUserById(id);
-      if(!user) return;
+      if (!user) return;
 
       const res = await verifyOTP(id, otp.join(''));
-      if(res.success) {
+      if (res.success) {
         const tempPass = localStorage.getItem('temp_pass');
         const signInResult = await signIn('credentials', {
           email: user.email,
@@ -95,10 +95,9 @@ const VerifyPage = ({ params }: PageProps) => {
         });
         localStorage.removeItem('temp_pass');
 
-        if(signInResult?.ok) {
+        if (signInResult?.ok) {
           router.push('/dashboard');
         } else {
-          console.log('Login failed');
           toast.error('Login failed', {
             position: "top-right",
             autoClose: 3000,
@@ -109,7 +108,7 @@ const VerifyPage = ({ params }: PageProps) => {
           });
           setIsVerifying(false);
         }
-      }else{
+      } else {
         toast.error('Invalid OTP', {
           position: "top-right",
           autoClose: 3000,
@@ -120,9 +119,8 @@ const VerifyPage = ({ params }: PageProps) => {
         });
         setIsVerifying(false);
       }
-    } catch(err) {
-      console.log(err);
-      toast.error("Error occured while verifying OTP, please try again", {
+    } catch (err) {
+      toast.error("Error occurred while verifying OTP, please try again", {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -131,17 +129,18 @@ const VerifyPage = ({ params }: PageProps) => {
         draggable: true,
       });
       setIsVerifying(false);
+      console.error(err);
     }
   };
 
-  const handleResend = async() => {
+  // Resend OTP handler
+  const handleResend = async () => {
     const user = await getUserById(id);
-    if(!user) return;
+    if (!user) return;
     const newOtpUser = await updateOTP(user.email);
-
     const res = await sendOTPEmail(user.email, newOtpUser.otp);
 
-    if(res.success) {
+    if (res.success) {
       toast.success('OTP sent successfully', {
         position: "top-right",
         autoClose: 3000,
@@ -160,11 +159,12 @@ const VerifyPage = ({ params }: PageProps) => {
         draggable: true,
       });
     }
-  }
+  };
 
   return (
     <Layout noLayout={true}>
       <div className="flex min-h-screen flex-col md:flex-row">
+        {/* Left Section - Illustration */}
         <div className="w-full md:w-1/2 bg-green-400 flex items-center justify-center md:shadow-[0_0px_60px_0px_rgba(0,0,0,0.3)] z-10">
           <div className="text-center p-16">
             <Image
@@ -183,6 +183,7 @@ const VerifyPage = ({ params }: PageProps) => {
           </div>
         </div>
 
+        {/* Right Section - OTP Form */}
         <div className="mt-5 md:w-1/2 flex items-center justify-center bg-white">
           <Card className="w-full max-w-md mx-8 bg-white shadow-lg bg-gradient-to-br from-gray-200 to-gray-150">
             <CardHeader>
@@ -220,7 +221,7 @@ const VerifyPage = ({ params }: PageProps) => {
                 </div>
                 <button
                   type="submit"
-                  className={`w-full bg-green-600 text-white py-3 px-4 rounded-lg ${isVerifying?'opacity-50 cursor-not-allowed':'hover:bg-green-700'} transition duration-200`}
+                  className={`w-full bg-green-600 text-white py-3 px-4 rounded-lg ${isVerifying ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'} transition duration-200`}
                 >
                   Verify Email
                 </button>
@@ -229,7 +230,7 @@ const VerifyPage = ({ params }: PageProps) => {
           </Card>
         </div>
       </div>
-      <ToastContainer/>
+      <ToastContainer />
     </Layout>
   );
 };

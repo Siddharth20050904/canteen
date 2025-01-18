@@ -11,11 +11,43 @@ import Image from 'next/image';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// ===== Type Definitions =====
+interface FormOption {
+  label: string;
+  value: string;
+}
+
+interface ReviewData {
+  meal: string;
+  rating: number;
+  comment: string;
+  category: string;
+  userId: string;
+  day: string;
+}
+
+/**
+ * FeedbackPage Component
+ * 
+ * A comprehensive page for users to submit meal feedback.
+ * Features:
+ * - Star rating system
+ * - Multiple choice selections for meal and category
+ * - Day selection
+ * - Comment submission
+ * - Toast notifications for feedback status
+ */
 const FeedbackPage = () => {
+  // ===== State and Session Management =====
   const { data: session } = useSession();
   const [rating, setRating] = React.useState(0);
   const [submitting, setSubmitting] = React.useState(false);
   
+  // ===== Form Submission Handler =====
+  /**
+   * Handles the submission of the feedback form
+   * @param event - Form submission event
+   */
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!session?.user?.id) return;
@@ -23,40 +55,18 @@ const FeedbackPage = () => {
     const formData = new FormData(event.currentTarget);
     const review = createReviewObject(formData, rating, session.user.id);
 
-    console.log(review);
-
     try {
       setSubmitting(true);
       const response = await addReview(review);
+      
       if (response.success) {
         await logActivity(session.user.id, 'Submitted a feedback', 'feedback');
-        toast.success('Feedback submitted successfully', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        showToast('success', 'Feedback submitted successfully');
       } else {
-        toast.error('Failed to submit feedback', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        showToast('error', 'Failed to submit feedback');
       }
     } catch(error) {
-      toast.error('Failed to submit feedback', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      showToast('error', 'Failed to submit feedback');
       console.log(error);
     } finally {
       setTimeout(() => {
@@ -84,15 +94,42 @@ const FeedbackPage = () => {
   );
 };
 
-const createReviewObject = (formData: FormData, rating: number, userId: string) => ({
+// ===== Utility Functions =====
+/**
+ * Creates a review object from form data
+ */
+const createReviewObject = (formData: FormData, rating: number, userId: string): ReviewData => ({
   meal: formData.get('meal') as string,
-  rating: rating,
+  rating,
   comment: formData.get('comment') as string,
   category: formData.get('category') as string,
-  userId: userId,
+  userId,
   day: formData.get('day') as string,
 });
 
+/**
+ * Shows a toast notification
+ */
+const showToast = (type: 'success' | 'error', message: string) => {
+  const toastConfig = {
+    position: "top-right" as const,
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+  };
+
+  if (type === 'success') {
+    toast.success(message, toastConfig);
+  } else {
+    toast.error(message, toastConfig);
+  }
+};
+// ===== UI Component Renderers =====
+/**
+ * Renders the page header section
+ */
 const renderPageHeader = () => (
   <div className='text-center mb-8 grid grid-cols-1 lg:grid-cols-2'>
     <div></div>
@@ -102,6 +139,9 @@ const renderPageHeader = () => (
   </div>
 );
 
+/**
+ * Renders the hero image section
+ */
 const renderHeroImage = () => (
   <div className="lg:w-1/2 flex items-start justify-start">
     <div className="relative w-full max-w-[300px] md:max-w-[400px] lg:max-w-[500px] mx-auto">
@@ -119,6 +159,9 @@ const renderHeroImage = () => (
   </div>
 );
 
+/**
+ * Renders the feedback form with all its components
+ */
 const renderFeedbackForm = (
   handleSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>,
   rating: number,
@@ -134,14 +177,14 @@ const renderFeedbackForm = (
     </CardHeader>
     <CardContent>
       <form className="space-y-6" onSubmit={handleSubmit}>
-        {renderFormField('Select Meal','meal', renderSelectField('meal',[
+        {renderFormField('Select Meal', 'meal', renderSelectField('meal', [
           { label: 'Breakfast', value: 'breakfast' },
           { label: 'Lunch', value: 'lunch' },
           { label: 'Snack', value: 'snack' },
           { label: 'Dinner', value: 'dinner' }
         ]))}
         {renderFormField('Rating', '', renderRatingStars(rating, setRating))}
-        {renderFormField('Category', 'category', renderSelectField('category',[
+        {renderFormField('Category', 'category', renderSelectField('category', [
           { label: 'Main Course', value: 'mainCourse' },
           { label: 'Side Dish', value: 'sideDish' },
           { label: 'Dessert', value: 'dessert' },
@@ -155,6 +198,10 @@ const renderFeedbackForm = (
   </Card>
 );
 
+// ===== Form Component Renderers =====
+/**
+ * Renders a form field with label and input
+ */
 const renderFormField = (label: string, name: string, children: React.ReactNode) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -164,7 +211,10 @@ const renderFormField = (label: string, name: string, children: React.ReactNode)
   </div>
 );
 
-const renderSelectField = (name: string, options: { label: string; value: string }[]) => (
+/**
+ * Renders a select input field with options
+ */
+const renderSelectField = (name: string, options: FormOption[]) => (
   <select className="w-full p-2 border rounded-lg focus:ring-blue-500" name={name}>
     {options.map(option => (
       <option key={option.value} value={option.value}>{option.label}</option>
@@ -172,6 +222,9 @@ const renderSelectField = (name: string, options: { label: string; value: string
   </select>
 );
 
+/**
+ * Renders the star rating component
+ */
 const renderRatingStars = (rating: number, setRating: React.Dispatch<React.SetStateAction<number>>) => (
   <div className="flex gap-2">
     {[1, 2, 3, 4, 5].map((star) => (
@@ -187,6 +240,9 @@ const renderRatingStars = (rating: number, setRating: React.Dispatch<React.SetSt
   </div>
 );
 
+/**
+ * Renders the day selection dropdown
+ */
 const renderDaySelect = () => (
   <select
     name="day"
@@ -200,6 +256,9 @@ const renderDaySelect = () => (
   </select>
 );
 
+/**
+ * Renders the comment textarea
+ */
 const renderTextArea = () => (
   <textarea 
     className="w-full p-2 border rounded-lg focus:ring-blue-500 min-h-[100px]"
@@ -208,6 +267,9 @@ const renderTextArea = () => (
   />
 );
 
+/**
+ * Renders the submit button
+ */
 const renderSubmitButton = (submitting: boolean) => (
   <button
     type="submit"
@@ -219,4 +281,3 @@ const renderSubmitButton = (submitting: boolean) => (
 );
 
 export default FeedbackPage;
-
