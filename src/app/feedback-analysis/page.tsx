@@ -56,17 +56,16 @@ const FeedbackAnalysisPage = () => {
 
   // Configuration for bar chart
   const options = {
+    indexAxis: 'y' as const, // This makes the bar chart horizontal
     scales: {
-      x: {
+      y: {
         grid: { display: false },
         ticks: {
           font: { size: 12 },
-          maxRotation: 90,
-          minRotation: 90,
           autoSkip: false
         }
       },
-      y: {
+      x: {
         beginAtZero: true,
         title: {
           display: true,
@@ -87,6 +86,7 @@ const FeedbackAnalysisPage = () => {
       padding: { top: 20 }
     }
   };
+
 
   // Data for bar chart
   const barData = {
@@ -192,9 +192,10 @@ const FeedbackAnalysisPage = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="flex justify-center">
-                      <div className="w-full h-[400px]">
-                        <Bar data={barData} options={options} />
-                      </div>
+                    <div className="w-full h-[600px]">
+                      <Bar data={barData} options={options} />
+                    </div>
+
                     </div>
                   </CardContent>
                 </Card>
@@ -206,6 +207,5 @@ const FeedbackAnalysisPage = () => {
     </Layout>
   );
 };
-
 export default FeedbackAnalysisPage;
 
